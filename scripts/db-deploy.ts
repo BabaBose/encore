@@ -8,11 +8,31 @@
  *
  * Pass `--force-seed` to reload the demo data deliberately.
  */
-import { createPgSql, migrate, MissingDatabaseUrlError } from '../src/db/client';
+import {
+  createPgSql,
+  databaseUrl,
+  describeConnection,
+  isSupabaseDirectHost,
+  migrate,
+  MissingDatabaseUrlError,
+} from '../src/db/client';
 import { seedDatabase } from './seed';
 
 async function main(): Promise<void> {
   const force = process.argv.includes('--force-seed');
+
+  // Say where we are connecting before trying, so a failure in a build log is
+  // readable without guessing which of several URLs was picked up.
+  const { host, port } = describeConnection(databaseUrl());
+  console.log(`Connecting to ${host}:${port}`);
+  if (isSupabaseDirectHost(host)) {
+    console.warn(
+      `\nWarning: ${host} is Supabase's direct endpoint, which resolves to IPv6 only.\n` +
+        'Vercel is IPv4-only, so this will fail to resolve. Use the transaction pooler\n' +
+        '(aws-…-<region>.pooler.supabase.com, port 6543) instead.\n',
+    );
+  }
+
   const db = createPgSql();
 
   await migrate(db);
@@ -45,6 +65,23 @@ main().catch((err) => {
         '  (port 6543, which is the one suited to serverless), with the password filled in.',
         '',
         'Then add it in Vercel → Project → Settings → Environment Variables and redeploy.',
+        '',
+      ].join('\n'),
+    );
+    process.exit(1);
+  }
+  const { host } = describeConnection(process.env.DATABASE_URL ?? process.env.POSTGRES_URL ?? '');
+  if ((err as NodeJS.ErrnoException)?.code === 'ENOTFOUND' && isSupabaseDirectHost(host)) {
+    console.error(
+      [
+        '',
+        `Could not resolve ${host}.`,
+        '',
+        "That is Supabase's direct endpoint and it has no IPv4 address. Vercel is",
+        'IPv4-only, so it can never reach it. Set DATABASE_URL to the transaction',
+        'pooler instead — Supabase → Project Settings → Database → Connection string',
+        '→ Transaction pooler (port 6543). DATABASE_URL takes precedence over the',
+        "integration's POSTGRES_URL.",
         '',
       ].join('\n'),
     );

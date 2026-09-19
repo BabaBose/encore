@@ -49,6 +49,27 @@ export function databaseUrl(): string {
   return url;
 }
 
+/** Host and port of a connection string, with the credentials left out. */
+export function describeConnection(url: string = databaseUrl()): { host: string; port: string } {
+  try {
+    const parsed = new URL(url);
+    return { host: parsed.hostname, port: parsed.port || '5432' };
+  } catch {
+    return { host: '(unparseable connection string)', port: '' };
+  }
+}
+
+/**
+ * Supabase's direct database host resolves to IPv6 only. Vercel's build
+ * containers and functions are IPv4-only, so a connection string pointing at it
+ * fails to resolve — which looks like a mysterious fast build failure rather
+ * than a networking mismatch. The pooler is IPv4 and is the right endpoint for
+ * serverless regardless, so this is worth naming precisely.
+ */
+export function isSupabaseDirectHost(host: string): boolean {
+  return /^db\.[a-z0-9]+\.supabase\.co$/.test(host);
+}
+
 /**
  * The connection is held on `globalThis`, not in a module variable.
  *
