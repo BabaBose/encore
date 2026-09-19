@@ -73,6 +73,35 @@ export type BlockSource = 'manual' | 'booking';
 
 export type BlockKind = 'single' | 'range' | 'recurring_weekday';
 
+/**
+ * Whether an entertainer wants residency inquiries while their calendar
+ * already has dates in the window.
+ *
+ * A one-off clash is binary — nobody plays two rooms on the same night — but a
+ * six-month contract with a handful of gigs already in it is something the two
+ * sides work out in the thread. Which of those it is, is the act's call, not
+ * the platform's.
+ */
+export type ResidencyInquiryPolicy =
+  /** Hide me from residency searches unless the window is substantially clear. */
+  | 'when_largely_free'
+  /** Keep me visible even with gigs booked in the window — I will work it out. */
+  | 'always';
+
+export const RESIDENCY_INQUIRY_POLICIES: readonly ResidencyInquiryPolicy[] = ['when_largely_free', 'always'];
+
+export const RESIDENCY_POLICY_LABEL: Record<ResidencyInquiryPolicy, string> = {
+  when_largely_free: 'Only when that window is largely free',
+  always: 'Always, even if I have gigs booked then',
+};
+
+export const RESIDENCY_POLICY_HINT: Record<ResidencyInquiryPolicy, string> = {
+  when_largely_free:
+    'You drop out of a residency search once a fifth of the window is spoken for, so you only hear about contracts you could take as they stand.',
+  always:
+    'You stay in residency searches whatever your calendar says. Venues still see exactly which dates are taken before they commit.',
+};
+
 /** Contract lengths an entertainer will consider for a residency, in months. */
 export type ContractLength = 1 | 3 | 6 | 12;
 

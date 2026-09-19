@@ -16,7 +16,15 @@
 import { addMonths, addDays } from './dates';
 import { isRangeFree, residencyAvailability, type AvailabilityBlock } from './availability';
 import { resolveHourlyRate, startingFromHourly, startingFromMonthly, type RateCard } from './rates';
-import type { ContractLength, GigType, IsoDate, Minor, TimeBlock, TopCategory } from './types';
+import type {
+  ContractLength,
+  GigType,
+  IsoDate,
+  Minor,
+  ResidencyInquiryPolicy,
+  TimeBlock,
+  TopCategory,
+} from './types';
 
 export interface CityRef {
   id: string;
@@ -46,6 +54,11 @@ export interface EntertainerRecord {
   /** Only meaningful with `acceptsLongTerm`: will they move city for a contract? */
   openToRelocate: boolean;
   contractLengths: ContractLength[];
+  /**
+   * Whether a calendar with dates already in the window should take this act
+   * out of residency searches. The act decides; see `ResidencyInquiryPolicy`.
+   */
+  residencyInquiryPolicy: ResidencyInquiryPolicy;
   rateCard: RateCard;
   blocks: AvailabilityBlock[];
   rating: number | null;
@@ -89,10 +102,26 @@ export type MatchReason =
   | 'open_to_relocate'
   | 'global_long_term_pool';
 
+/**
+ * What a residency search found on the act's calendar for the window it asked
+ * about. Present whenever a residency search named a length, including when the
+ * act has committed dates — an act who stays visible while busy is shown with
+ * the conflicts attached, never as though the window were clear.
+ */
+export interface ResidencyWindowState {
+  start: IsoDate;
+  end: IsoDate;
+  totalDays: number;
+  blockedDays: number;
+  /** False when the window is busy enough that the default gate would hide them. */
+  largelyFree: boolean;
+}
+
 export interface SearchResult {
   entertainer: EntertainerRecord;
   /** Why this act is eligible — surfaced as the "open to relocation" style tag. */
   reason: MatchReason;
+  residency: ResidencyWindowState | null;
   /** The rate shown on the card, already resolved through the rate rules. */
   priceFrom: Minor;
   priceUnit: 'hour' | 'month';
@@ -147,11 +176,16 @@ interface EligibilityContext {
  * The eligibility gate. Everything before this is a filter a venue can loosen;
  * this is the rule that decides whether an act can be considered at all.
  */
+interface Eligibility {
+  reason: MatchReason;
+  residency: ResidencyWindowState | null;
+}
+
 function eligibility(
   entertainer: EntertainerRecord,
   query: SearchQuery,
   ctx: EligibilityContext,
-): MatchReason | null {
+): Eligibility | null {
   if (!entertainer.isLive) return null;
 
   if (query.gigType === 'one_time') {
@@ -168,9 +202,10 @@ function eligibility(
 
     if (query.date) {
       const end = query.dateEnd ?? query.date;
+      // A one-off clash is absolute: nobody plays two rooms on one night.
       if (!isRangeFree(entertainer.blocks, query.date, end)) return null;
     }
-    return reason;
+    return { reason, residency: null };
   }
 
   // Long-term.
@@ -178,18 +213,32 @@ function eligibility(
   if (query.months && !entertainer.contractLengths.includes(query.months)) return null;
 
   const { start, end } = residencyWindow(query, ctx.today);
-  if (query.months && !residencyAvailability(entertainer.blocks, start, end).available) return null;
+  let residency: ResidencyWindowState | null = null;
+
+  if (query.months) {
+    const state = residencyAvailability(entertainer.blocks, start, end);
+    residency = {
+      start,
+      end,
+      totalDays: state.totalDays,
+      blockedDays: state.blockedDays,
+      largelyFree: state.available,
+    };
+    // A busy window only hides the act if that is what the act asked for.
+    // Either way the venue is shown what is already committed.
+    if (!state.available && entertainer.residencyInquiryPolicy === 'when_largely_free') return null;
+  }
 
   const city = query.cityId ? ctx.cities.get(query.cityId) : null;
   if (!city) {
     // Long-term with no city: the global open-to-long-term pool.
-    return 'global_long_term_pool';
+    return { reason: 'global_long_term_pool', residency };
   }
 
   // Long-term with a city: local acts, plus the relocation pool from anywhere.
   const local = locationReachFor(entertainer, city);
-  if (local) return local;
-  if (entertainer.openToRelocate) return 'open_to_relocate';
+  if (local) return { reason: local, residency };
+  if (entertainer.openToRelocate) return { reason: 'open_to_relocate', residency };
   return null;
 }
 
@@ -221,8 +270,15 @@ function passesFilters(entertainer: EntertainerRecord, query: SearchQuery, price
  * Ranking for `best_match`. Deliberately simple and explainable: a venue should
  * be able to tell why an act is near the top.
  */
-function score(entertainer: EntertainerRecord, reason: MatchReason): number {
+function score(
+  entertainer: EntertainerRecord,
+  reason: MatchReason,
+  residency: ResidencyWindowState | null,
+): number {
   let s = 0;
+  // An act whose window is already busy is still a real option, but a venue
+  // would rather see the ones who are clear first.
+  if (residency && !residency.largelyFree) s -= 14;
   if (reason === 'based_in_city') s += 30;
   else if (reason === 'travels_to_city') s += 22;
   else if (reason === 'within_travel_radius') s += 18;
@@ -251,13 +307,21 @@ export function searchEntertainers(
 
   const results: SearchResult[] = [];
   for (const entertainer of pool) {
-    const reason = eligibility(entertainer, query, eligibilityCtx);
-    if (!reason) continue;
+    const match = eligibility(entertainer, query, eligibilityCtx);
+    if (!match) continue;
 
     const { priceFrom, unit, exact } = cardPrice(entertainer, query);
     if (!passesFilters(entertainer, query, exact ?? priceFrom)) continue;
 
-    results.push({ entertainer, reason, priceFrom, priceUnit: unit, exactRate: exact, score: score(entertainer, reason) });
+    results.push({
+      entertainer,
+      reason: match.reason,
+      residency: match.residency,
+      priceFrom,
+      priceUnit: unit,
+      exactRate: exact,
+      score: score(entertainer, match.reason, match.residency),
+    });
   }
 
   sortResults(results, query.sort ?? (query.gigType === 'long_term' ? 'longest_available' : 'best_match'));

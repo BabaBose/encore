@@ -15,7 +15,7 @@ import { hashPassword } from '../src/lib/auth-core';
 import { newId, slugify } from '../src/db/ids';
 import { sendInquiry, transitionInquiry, postMessage, leaveReview } from '../src/services/booking';
 import { addDays } from '../src/domain/dates';
-import type { ContractLength, TimeBlock, Weekday } from '../src/domain/types';
+import type { ContractLength, ResidencyInquiryPolicy, TimeBlock, Weekday } from '../src/domain/types';
 
 const DB_PATH = process.env.ENCORE_DB_PATH ?? join(process.cwd(), 'data', 'encore.db');
 
@@ -121,6 +121,7 @@ interface ActSeed {
   longTerm?: boolean;
   relocate?: boolean;
   contractLengths?: ContractLength[];
+  residencyPolicy?: ResidencyInquiryPolicy;
   baseHourly: number;
   minimumHours: number;
   rules: Array<[Weekday, TimeBlock, number, number?]>;
@@ -225,6 +226,9 @@ const acts: ActSeed[] = [
     longTerm: true,
     relocate: true,
     contractLengths: [3, 6, 12],
+    // In demand and almost never wholly free, but a residency is worth a
+    // conversation regardless — so they stay in those searches.
+    residencyPolicy: 'always',
     baseHourly: 110000,
     minimumHours: 3,
     rules: standardRules(120000, 150000, 95000),
@@ -238,7 +242,12 @@ const acts: ActSeed[] = [
     ],
     videos: ['https://www.youtube.com/watch?v=encore-amber-quartet'],
     photos: 3,
-    blocks: [{ from: 10, to: 11, note: 'Touring' }],
+    blocks: [
+      { from: 10, to: 11, note: 'Touring' },
+      // A long European run that would hide them from residency searches if
+      // they had not asked to stay visible.
+      { from: 20, to: 95, note: 'European tour' },
+    ],
   },
   {
     name: 'Kael Voss',
@@ -428,6 +437,7 @@ const acts: ActSeed[] = [
     longTerm: true,
     relocate: true,
     contractLengths: [3, 6, 12],
+    residencyPolicy: 'always',
     baseHourly: 110000,
     minimumHours: 2,
     rules: standardRules(110000, 130000, 100000),
@@ -523,10 +533,10 @@ const insertEnt = db.prepare(
                              short_bio, full_bio, category_id, home_city_id, travel_radius_km, country_of_origin,
                              team_size, languages, equipment_provided, equipment_required, cover_accent, status,
                              verified, featured, accepts_short_term, accepts_long_term, open_to_relocate,
-                             contract_lengths, created_at, updated_at)
+                             contract_lengths, residency_inquiry_policy, created_at, updated_at)
    VALUES (@id, @userId, @managedBy, @repNote, @slug, @name, @realName, @shortBio, @fullBio, @categoryId,
            @cityId, @radius, @origin, @teamSize, @languages, @provides, @requires, @accent, @status,
-           @verified, @featured, @short, @long, @relocate, @lengths, @now, @now)`,
+           @verified, @featured, @short, @long, @relocate, @lengths, @residencyPolicy, @now, @now)`,
 );
 
 // An agency account first, so the acts it represents can point at it.
@@ -591,6 +601,7 @@ for (const act of acts) {
     long: act.longTerm ? 1 : 0,
     relocate: act.relocate ? 1 : 0,
     lengths: JSON.stringify(act.contractLengths ?? []),
+    residencyPolicy: act.residencyPolicy ?? 'when_largely_free',
     now: new Date().toISOString(),
   });
 

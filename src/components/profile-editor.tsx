@@ -11,7 +11,15 @@ import {
   submitForReviewAction,
   type ActionState,
 } from '@/app/actions';
-import { CONTRACT_LENGTHS, type ContractLength, type ProfileStatus } from '@/domain/types';
+import {
+  CONTRACT_LENGTHS,
+  RESIDENCY_INQUIRY_POLICIES,
+  RESIDENCY_POLICY_HINT,
+  RESIDENCY_POLICY_LABEL,
+  type ContractLength,
+  type ProfileStatus,
+  type ResidencyInquiryPolicy,
+} from '@/domain/types';
 import { MAX_VIDEOS, PROFILE_STATUS_LABEL, type Requirement } from '@/domain/profile';
 import type { AwardRow, CategoryRow, MediaRow, ReferenceRow } from '@/db/repo';
 import type { CityRef } from '@/domain/search';
@@ -36,6 +44,7 @@ export interface ActFormValues {
   acceptsLongTerm: boolean;
   openToRelocate: boolean;
   contractLengths: ContractLength[];
+  residencyInquiryPolicy: ResidencyInquiryPolicy;
   representationNote: string | null;
   isManaged: boolean;
 }
@@ -57,6 +66,7 @@ export function ProfileForm({
   );
   // Long-term fields only make sense once residencies are switched on.
   const [longTerm, setLongTerm] = useState(act.acceptsLongTerm);
+  const [residencyPolicy, setResidencyPolicy] = useState(act.residencyInquiryPolicy);
 
   const visibleGenres = genres.filter((g) => g.parentId === categoryId);
 
@@ -286,6 +296,34 @@ export function ProfileForm({
                   </span>
                 </span>
               </label>
+
+              <fieldset className="stack" style={{ gap: 8, border: 'none', padding: 0, margin: 0 }}>
+                <legend className="field__label" style={{ marginBottom: 6 }}>
+                  Show me in residency searches
+                </legend>
+                {RESIDENCY_INQUIRY_POLICIES.map((policy) => (
+                  <label key={policy} className="checkline">
+                    <input
+                      type="radio"
+                      name="residencyInquiryPolicy"
+                      value={policy}
+                      checked={residencyPolicy === policy}
+                      onChange={() => setResidencyPolicy(policy)}
+                    />
+                    <span>
+                      <strong>{RESIDENCY_POLICY_LABEL[policy]}</strong>
+                      <br />
+                      <span className="dim" style={{ fontSize: 12 }}>
+                        {RESIDENCY_POLICY_HINT[policy]}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+                <p className="field__hint">
+                  A single date is different: if a night is already taken you never appear in a one-off search
+                  for it, whichever of these you pick.
+                </p>
+              </fieldset>
             </div>
           ) : null}
         </div>

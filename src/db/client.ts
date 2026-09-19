@@ -24,9 +24,37 @@ export function openDatabase(path: string = process.env.ENCORE_DB_PATH ?? DEFAUL
   return db;
 }
 
+/**
+ * Columns added after a table first shipped.
+ *
+ * `schema.sql` uses `CREATE TABLE IF NOT EXISTS`, so it builds a new database
+ * correctly but never touches an existing one. These run afterwards and are
+ * additive and idempotent: each is applied only if the column is genuinely
+ * missing, so a database created today skips all of them.
+ */
+const ADDED_COLUMNS: Array<{ table: string; column: string; definition: string }> = [
+  {
+    table: 'entertainers',
+    column: 'residency_inquiry_policy',
+    definition: "TEXT NOT NULL DEFAULT 'when_largely_free'",
+  },
+];
+
+function columnExists(db: Db, table: string, column: string): boolean {
+  const rows = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  return rows.some((r) => r.name === column);
+}
+
 export function migrate(db: Db): void {
   const schema = readFileSync(join(process.cwd(), 'src', 'db', 'schema.sql'), 'utf8');
   db.exec(schema);
+
+  for (const { table, column, definition } of ADDED_COLUMNS) {
+    if (columnExists(db, table, column)) continue;
+    // SQLite cannot add a column with a CHECK constraint, so the enum is
+    // enforced by the domain and by schema.sql for freshly created databases.
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
 }
 
 /** The shared connection used by the app. Migrates on first open. */

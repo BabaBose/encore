@@ -13,7 +13,13 @@ import { sendInquiryAction, type ActionState } from '@/app/actions';
 import { isRangeFree, blockedDatesIn, residencyAvailability, type AvailabilityBlock } from '@/domain/availability';
 import { quoteHourly, quoteResidency, type RateCard } from '@/domain/rates';
 import { addDays, addMonths, isIsoDate, today } from '@/domain/dates';
-import { TIME_BLOCK_LABELS, TIME_BLOCKS, type ContractLength, type TimeBlock } from '@/domain/types';
+import {
+  TIME_BLOCK_LABELS,
+  TIME_BLOCKS,
+  type ContractLength,
+  type ResidencyInquiryPolicy,
+  type TimeBlock,
+} from '@/domain/types';
 import { formatMoney, formatDate } from '@/lib/format';
 import type { CityRef } from '@/domain/search';
 
@@ -22,6 +28,7 @@ export interface InquiryPanelProps {
   acceptsShortTerm: boolean;
   acceptsLongTerm: boolean;
   contractLengths: ContractLength[];
+  residencyInquiryPolicy: ResidencyInquiryPolicy;
   rateCard: RateCard;
   blocks: AvailabilityBlock[];
   cities: CityRef[];
@@ -92,11 +99,17 @@ export function InquiryPanel(props: InquiryPanelProps) {
     if (gigType === 'long_term') {
       const end = addDays(addMonths(startDate, months), -1);
       const r = residencyAvailability(props.blocks, startDate, end);
+      if (r.available) {
+        return { free: true, message: `Substantially open across those ${months} months` };
+      }
+      // A busy window is not a refusal when the act has said it wants to hear
+      // about residencies anyway — say which it is.
       return {
-        free: r.available,
-        message: r.available
-          ? `Substantially open across those ${months} months`
-          : `${r.blockedDays} of ${r.totalDays} days are already committed`,
+        free: false,
+        message:
+          props.residencyInquiryPolicy === 'always'
+            ? `${r.blockedDays} of ${r.totalDays} days are booked — they still want to hear about residencies`
+            : `${r.blockedDays} of ${r.totalDays} days are already committed`,
       };
     }
     const end = isIsoDate(endDate) ? endDate : startDate;
@@ -108,7 +121,7 @@ export function InquiryPanel(props: InquiryPanelProps) {
         ? 'Free on that date'
         : `Already committed: ${clashes.slice(0, 3).map(formatDate).join(', ')}${clashes.length > 3 ? '…' : ''}`,
     };
-  }, [gigType, startDate, endDate, months, props.blocks]);
+  }, [gigType, startDate, endDate, months, props.blocks, props.residencyInquiryPolicy]);
 
   const offerValue = offerEdited ?? (quote.amount ? String(quote.amount / 100) : '');
 
@@ -314,7 +327,9 @@ export function InquiryPanel(props: InquiryPanelProps) {
       </button>
       <p className="field__hint" style={{ textAlign: 'center' }}>
         {availability && !availability.free
-          ? 'You can still ask — they may free the date up.'
+          ? gigType === 'long_term' && props.residencyInquiryPolicy === 'always'
+            ? 'Work the overlapping dates out in the thread — nothing is booked until they accept.'
+            : 'You can still ask — they may free the date up.'
           : 'They accept or counter; nothing is booked until they do.'}
       </p>
     </form>

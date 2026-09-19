@@ -85,6 +85,10 @@ CREATE TABLE IF NOT EXISTS entertainers (
   accepts_long_term   INTEGER NOT NULL DEFAULT 0,
   open_to_relocate    INTEGER NOT NULL DEFAULT 0,
   contract_lengths    TEXT NOT NULL DEFAULT '[]', -- JSON array of months
+  -- Whether a calendar with dates already in the window takes this act out of
+  -- residency searches. The act decides; a busy window is not a refusal.
+  residency_inquiry_policy TEXT NOT NULL DEFAULT 'when_largely_free'
+                        CHECK (residency_inquiry_policy IN ('when_largely_free','always')),
 
   created_at          TEXT NOT NULL,
   updated_at          TEXT NOT NULL

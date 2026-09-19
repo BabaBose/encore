@@ -76,6 +76,11 @@ export interface ActCardProps {
   reason?: MatchReason | null;
   /** Shown beside the price when it was resolved for a specific date. */
   priceNote?: string | null;
+  /**
+   * For a residency search: how much of the window is already committed. Shown
+   * so an act who stays visible while busy is never mistaken for a clear one.
+   */
+  windowNote?: string | null;
 }
 
 export function ActCard(props: ActCardProps) {
@@ -107,6 +112,11 @@ export function ActCard(props: ActCardProps) {
         {props.reason && props.reason !== 'based_in_city' ? (
           <span className="eyebrow" style={{ color: 'var(--accent)' }}>
             {MATCH_REASON_LABEL[props.reason]}
+          </span>
+        ) : null}
+        {props.windowNote ? (
+          <span className="eyebrow" style={{ color: 'var(--amber)' }}>
+            {props.windowNote}
           </span>
         ) : null}
       </div>

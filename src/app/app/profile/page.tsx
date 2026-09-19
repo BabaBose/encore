@@ -82,6 +82,7 @@ export default async function ProfileEditorPage({
                 acceptsLongTerm: act.acceptsLongTerm,
                 openToRelocate: act.openToRelocate,
                 contractLengths: act.contractLengths,
+                residencyInquiryPolicy: act.residencyInquiryPolicy,
                 representationNote: act.representationNote,
                 isManaged: !!act.managedByUserId,
               }}

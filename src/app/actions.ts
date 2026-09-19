@@ -17,7 +17,16 @@ import { accessRoleFor, leaveReview, postMessage, sendInquiry, transitionInquiry
 import { moveProfile, setFeatured, setVerified } from '@/services/profile';
 import { canRemoveBlock, normaliseManualBlock } from '@/domain/availability';
 import { isIsoDate } from '@/domain/dates';
-import { CONTRACT_LENGTHS, TIME_BLOCKS, type ContractLength, type InquiryStatus, type TimeBlock, type Weekday } from '@/domain/types';
+import {
+  CONTRACT_LENGTHS,
+  RESIDENCY_INQUIRY_POLICIES,
+  TIME_BLOCKS,
+  type ContractLength,
+  type InquiryStatus,
+  type ResidencyInquiryPolicy,
+  type TimeBlock,
+  type Weekday,
+} from '@/domain/types';
 import { parseMoney } from '@/lib/format';
 
 export interface ActionState {
@@ -301,6 +310,11 @@ export async function saveProfileAction(_prev: ActionState, data: FormData): Pro
       acceptsLongTerm: bool(data, 'acceptsLongTerm'),
       openToRelocate: bool(data, 'openToRelocate'),
       contractLengths: lengths,
+      residencyInquiryPolicy: RESIDENCY_INQUIRY_POLICIES.includes(
+        str(data, 'residencyInquiryPolicy') as ResidencyInquiryPolicy,
+      )
+        ? (str(data, 'residencyInquiryPolicy') as ResidencyInquiryPolicy)
+        : 'when_largely_free',
       representationNote: str(data, 'representationNote') || null,
     });
     repo.setEntertainerGenres(db, ent.id, data.getAll('genres').map(String).filter(Boolean));

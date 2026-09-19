@@ -170,6 +170,9 @@ export default async function ProfilePage({
                         ? act.contractLengths.map((m) => `${m} month${m > 1 ? 's' : ''}`).join(' · ')
                         : 'On request'}
                       {act.openToRelocate ? ' · will relocate' : ' · home city only'}
+                      {act.residencyInquiryPolicy === 'always'
+                        ? ' · takes residency inquiries even with dates booked'
+                        : ''}
                     </dd>
                   </>
                 ) : null}
@@ -349,6 +352,7 @@ export default async function ProfilePage({
                     acceptsShortTerm={act.acceptsShortTerm}
                     acceptsLongTerm={act.acceptsLongTerm}
                     contractLengths={act.contractLengths}
+                    residencyInquiryPolicy={act.residencyInquiryPolicy}
                     rateCard={act.rateCard}
                     blocks={act.blocks}
                     cities={cities}

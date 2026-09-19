@@ -99,12 +99,18 @@ export function blockedDatesIn(blocks: AvailabilityBlock[], start: IsoDate, end:
  * `maxBlockedRatio` is the share of days in the window that may already be
  * spoken for before the entertainer stops counting as available for a
  * residency. A venue still sees the exact conflicts before confirming.
+ *
+ * Whether this gate applies at all is the entertainer's own setting — see
+ * `ResidencyInquiryPolicy`. This function only ever reports; it never decides
+ * to hide anyone.
  */
+export const DEFAULT_RESIDENCY_TOLERANCE = 0.2;
+
 export function residencyAvailability(
   blocks: AvailabilityBlock[],
   start: IsoDate,
   end: IsoDate,
-  maxBlockedRatio = 0.2,
+  maxBlockedRatio = DEFAULT_RESIDENCY_TOLERANCE,
 ): { available: boolean; totalDays: number; blockedDays: number; blockedRatio: number } {
   const days = availabilityCalendar(blocks, start, end);
   const blockedDays = days.filter((d) => d.status !== 'available').length;

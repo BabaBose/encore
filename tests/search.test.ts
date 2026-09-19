@@ -33,6 +33,7 @@ function act(overrides: Partial<EntertainerRecord> & { id: string }): Entertaine
     acceptsLongTerm: false,
     openToRelocate: false,
     contractLengths: [],
+    residencyInquiryPolicy: 'when_largely_free',
     rateCard: rateCard(40000, 1200000),
     blocks: [],
     rating: 4.5,
@@ -170,10 +171,99 @@ describe('long-term searches reach the relocation pool', () => {
     expect(out.total).toBe(0);
   });
 
+  it('reports how clear the window is, even when the act is free', () => {
+    const out = searchEntertainers(
+      [localResidency],
+      { gigType: 'long_term', cityId: 'dubai', months: 3, startDate: '2026-12-01' },
+      ctx,
+    );
+    const residency = out.results[0]?.residency;
+    expect(residency?.start).toBe('2026-12-01');
+    expect(residency?.end).toBe('2027-02-28');
+    expect(residency?.blockedDays).toBe(0);
+    expect(residency?.largelyFree).toBe(true);
+  });
+
+  it('carries no residency state for a one-off search', () => {
+    const out = searchEntertainers([localResidency], { gigType: 'one_time', cityId: 'dubai', date: '2026-12-31' }, ctx);
+    expect(out.results[0]?.residency).toBeNull();
+  });
+
   it('prices long-term cards per month, not per hour', () => {
     const out = searchEntertainers([localResidency], { gigType: 'long_term', months: 3, startDate: '2026-12-01' }, ctx);
     expect(out.results[0]?.priceUnit).toBe('month');
     expect(out.results[0]?.priceFrom).toBe(1200000);
+  });
+});
+
+describe('an act who wants residency inquiries while booked', () => {
+  // Most of December and January already committed — well past the default
+  // tolerance, so the standard gate would hide this act.
+  const busyWindow = [
+    { id: 'x', kind: 'range' as const, source: 'booking' as const, start: '2026-12-01', end: '2027-01-31', bookingId: 'b' },
+  ];
+
+  const cautious = act({
+    id: 'cautious',
+    acceptsLongTerm: true,
+    contractLengths: [3],
+    blocks: busyWindow,
+    residencyInquiryPolicy: 'when_largely_free',
+  });
+
+  const openAnyway = act({
+    id: 'open-anyway',
+    acceptsLongTerm: true,
+    contractLengths: [3],
+    blocks: busyWindow,
+    residencyInquiryPolicy: 'always',
+  });
+
+  const query = { gigType: 'long_term' as const, cityId: 'dubai', months: 3 as const, startDate: '2026-12-01' };
+
+  it('stays in the results where the cautious act drops out', () => {
+    expect(names(searchEntertainers([cautious, openAnyway], query, ctx))).toEqual(['open-anyway']);
+  });
+
+  it('is shown with the conflicts attached, not as though the window were clear', () => {
+    const result = searchEntertainers([openAnyway], query, ctx).results[0];
+    expect(result.residency?.largelyFree).toBe(false);
+    expect(result.residency?.blockedDays).toBe(62);
+    expect(result.residency?.totalDays).toBe(90);
+  });
+
+  it('ranks below an act who is actually free that window', () => {
+    const clear = act({ id: 'clear', acceptsLongTerm: true, contractLengths: [3] });
+    const out = searchEntertainers([openAnyway, clear], query, ctx);
+    expect(out.results.map((r) => r.entertainer.id)).toEqual(['clear', 'open-anyway']);
+  });
+
+  it('does not change what a one-off search does — that clash is absolute', () => {
+    const openOnDate = act({
+      id: 'open-anyway-oneoff',
+      residencyInquiryPolicy: 'always',
+      blocks: [{ id: 'x', kind: 'single', source: 'booking', start: '2026-12-31', end: '2026-12-31', bookingId: 'b' }],
+    });
+    const out = searchEntertainers([openOnDate], { gigType: 'one_time', cityId: 'dubai', date: '2026-12-31' }, ctx);
+    expect(out.total).toBe(0);
+  });
+
+  it('still respects the contract lengths the act will consider', () => {
+    const out = searchEntertainers([openAnyway], { ...query, months: 6 }, ctx);
+    expect(out.total).toBe(0);
+  });
+
+  it('still respects relocation — being open while busy is not being open to move', () => {
+    const remote = act({
+      id: 'remote-busy',
+      homeCity: london,
+      acceptsLongTerm: true,
+      openToRelocate: false,
+      contractLengths: [3],
+      blocks: busyWindow,
+      residencyInquiryPolicy: 'always',
+    });
+    expect(names(searchEntertainers([remote], query, ctx))).toEqual([]);
   });
 });
 

@@ -18,6 +18,7 @@ import type {
   InquiryStatus,
   IsoDate,
   ProfileStatus,
+  ResidencyInquiryPolicy,
   TimeBlock,
   TopCategory,
   UserRole,
@@ -424,6 +425,8 @@ function mapEntertainer(db: Db, r: Record<string, unknown>): EntertainerDetail {
     acceptsLongTerm: !!r.accepts_long_term,
     openToRelocate: !!r.open_to_relocate,
     contractLengths: JSON.parse((r.contract_lengths as string) ?? '[]') as ContractLength[],
+    residencyInquiryPolicy: ((r.residency_inquiry_policy as string) ??
+      'when_largely_free') as ResidencyInquiryPolicy,
     rateCard: loadRateCard(db, id),
     rateCardPublished: isRateCardPublished(db, id),
     blocks: loadBlocks(db, id),
@@ -535,6 +538,7 @@ export function updateEntertainerProfile(
     acceptsLongTerm: boolean;
     openToRelocate: boolean;
     contractLengths: ContractLength[];
+    residencyInquiryPolicy: ResidencyInquiryPolicy;
     representationNote: string | null;
   },
 ): void {
@@ -545,7 +549,8 @@ export function updateEntertainerProfile(
        team_size = @teamSize, languages = @languages, equipment_provided = @provided,
        equipment_required = @required, travel_radius_km = @radius,
        accepts_short_term = @short, accepts_long_term = @long, open_to_relocate = @relocate,
-       contract_lengths = @lengths, representation_note = @repNote, updated_at = @now
+       contract_lengths = @lengths, residency_inquiry_policy = @residencyPolicy,
+       representation_note = @repNote, updated_at = @now
      WHERE id = @id`,
   ).run({
     id,
@@ -565,6 +570,7 @@ export function updateEntertainerProfile(
     long: input.acceptsLongTerm ? 1 : 0,
     relocate: input.openToRelocate ? 1 : 0,
     lengths: JSON.stringify(input.contractLengths),
+    residencyPolicy: input.residencyInquiryPolicy,
     repNote: input.representationNote,
     now: nowIso(),
   });

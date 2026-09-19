@@ -342,6 +342,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                         : null
                   }
                   priceNote={r.exactRate && query.date ? `on ${formatDateShort(query.date)}` : null}
+                  windowNote={
+                    r.residency && !r.residency.largelyFree
+                      ? `${r.residency.blockedDays} of ${r.residency.totalDays} days already booked — open to talking`
+                      : null
+                  }
                 />
               ))}
             </div>
@@ -349,7 +354,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
           <p className="dim" style={{ marginTop: 22, fontSize: 12 }}>
             {longTerm
-              ? `Residency matching: acts based in the city, plus anyone anywhere marked ${MATCH_REASON_LABEL.open_to_relocate.toLowerCase()}.`
+              ? `Residency matching: acts based in the city, plus anyone anywhere marked ${MATCH_REASON_LABEL.open_to_relocate.toLowerCase()}. ` +
+                'Acts who take residency inquiries while already booked appear too, with their committed days shown.'
               : 'One-off matching: acts based in, travelling to, or within travel range of the city, and free on the date.'}
           </p>
         </div>

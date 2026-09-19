@@ -65,6 +65,28 @@ So a one-off local gig never surfaces someone in another country, while a
 multi-month contract search reaches the relocation pool. Every result carries
 the reason it matched, which is what the "Open to relocation" tag on a card is.
 
+### A busy calendar is not a refusal — the act decides
+
+A one-off clash is absolute: nobody plays two rooms on the same night, so a
+taken date always removes an act from a one-off search for it.
+
+A residency is different. A six-month contract with a handful of gigs already
+in it is something the two sides work out in the thread, and whether that is
+worth hearing about is the act's call, not the platform's. Each act picks one
+of two settings, under **Show me in residency searches** on their profile:
+
+- **Only when that window is largely free** — they drop out of a residency
+  search once about a fifth of the window is spoken for, so they only hear
+  about contracts they could take as they stand.
+- **Always, even if I have gigs booked then** — they stay visible whatever the
+  calendar says.
+
+Staying visible never means hiding the truth. An act surfaced on a busy window
+is shown with the conflict attached ("71 of 92 days already booked — open to
+talking") on the card, in the booking panel and on the profile calendar, and
+ranks below acts who are genuinely clear. Nothing about the confirmation rules
+changes: the dates still have to be free when the booking is confirmed.
+
 ### Rates resolve in a fixed order
 
 `special-date rate > [day-of-week × time-block] rule > base hourly rate`
