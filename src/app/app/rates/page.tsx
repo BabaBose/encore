@@ -24,7 +24,7 @@ export default async function RatesPage({
   const db = getDb();
 
   const actId = typeof sp.act === 'string' ? sp.act : undefined;
-  const act = actId ? repo.getEntertainerById(db, actId) : repo.getEntertainerForUser(db, user.id);
+  const act = actId ? await repo.getEntertainerById(db, actId) : await repo.getEntertainerForUser(db, user.id);
   if (!act || (act.userId !== user.id && act.managedByUserId !== user.id)) {
     return (
       <Shell user={user} current="/app/rates" badges={badges}>

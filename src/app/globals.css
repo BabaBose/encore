@@ -1068,19 +1068,3 @@ a:focus-visible {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
-
-/* ------------------------------------------------------- preview notice -- */
-
-.demo-bar {
-  padding: 9px 40px;
-  background: color-mix(in srgb, var(--amber) 14%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--amber) 30%, transparent);
-  color: color-mix(in srgb, var(--amber) 78%, var(--ink));
-  font: 500 12.5px/1.5 var(--font-sans);
-}
-
-@media (max-width: 900px) {
-  .demo-bar {
-    padding: 9px 16px;
-  }
-}

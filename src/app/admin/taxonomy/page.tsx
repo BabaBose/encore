@@ -15,9 +15,10 @@ export default async function TaxonomyPage() {
   const user = await requireRole('admin');
   const { badges } = await pageContext();
   const db = getDb();
-  const categories = repo.topCategories(db);
-  const cities = repo.listCities(db);
-  const acts = repo.allEntertainers(db);
+  const categories = await repo.topCategories(db);
+  const genresPerCategory = await Promise.all(categories.map((c) => repo.genresFor(db, c.id)));
+  const cities = await repo.listCities(db);
+  const acts = await repo.allEntertainers(db);
 
   return (
     <Shell user={user} current="/admin/taxonomy" badges={badges}>
@@ -33,8 +34,8 @@ export default async function TaxonomyPage() {
         <section style={{ marginBottom: 30 }}>
           <SectionHead title="Categories and genres" />
           <div className="stack" style={{ gap: 12 }}>
-            {categories.map((cat) => {
-              const genres = repo.genresFor(db, cat.id);
+            {categories.map((cat, i) => {
+              const genres = genresPerCategory[i];
               const count = acts.filter((a) => a.category === cat.slug).length;
               return (
                 <div key={cat.id} className="card" style={accentStyle(cat.accent ?? 'var(--pink)')}>

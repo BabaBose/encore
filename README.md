@@ -14,8 +14,20 @@ availability and price before it sends anything.
 
 ```bash
 npm install
-npm run seed     # builds data/booktheact.db with a demo marketplace
 npm run dev      # http://localhost:3000
+```
+
+With no `DATABASE_URL` set, the app boots an in-process Postgres (PGlite) under
+`data/` and applies the schema itself, so a fresh clone runs with nothing to
+install or connect to. Load the demo marketplace into it with `npm run db:push`.
+
+Against a real database — Supabase, or any Postgres — set `DATABASE_URL` and run
+the same command:
+
+```bash
+export DATABASE_URL='postgresql://…'   # Supabase: the transaction pooler, port 6543
+npm run db:push                        # applies the schema; seeds only if empty
+npm run dev
 ```
 
 Sign in with any of these — the password is always `password`:
@@ -27,8 +39,8 @@ Sign in with any of these — the password is always `password`:
 | Agency      | `northline@booktheact.test`   | Their roster        |
 | Admin       | `admin@booktheact.test`       | The review queue    |
 
-Other scripts: `npm test` (115 tests), `npm run typecheck`, `npm run build`,
-`npm run reset` (wipe and reseed).
+Other scripts: `npm test`, `npm run typecheck`, `npm run build`, and
+`npm run db:reset` to reload the demo data over whatever is there.
 
 ## Brand
 
@@ -67,10 +79,47 @@ can quote a price by calling the very same `resolveHourlyRate` the server uses
 when it creates the inquiry, so the figure a venue is shown cannot drift from
 the figure it is charged.
 
-Next.js 15 (App Router) · React 19 · SQLite via `better-sqlite3` · no ORM, no
-CSS framework, no auth library. Money is stored as integer minor units; dates
-are bare `YYYY-MM-DD` strings, because a booking is about a calendar day in the
+Next.js 15 (App Router) · React 19 · Postgres on Supabase · no ORM, no CSS
+framework, no auth library. Money is stored as integer minor units; dates are
+bare `YYYY-MM-DD` strings, because a booking is about a calendar day in the
 venue's city, not an instant.
+
+### The database
+
+Everything goes through one small `Sql` interface (`src/db/client.ts`) rather
+than a driver, so the same repository code runs against Supabase in production
+and against an in-process Postgres in the tests. Both are real Postgres — the
+tests are not checking a dialect that never ships.
+
+Three things worth knowing:
+
+- **Connections are held on `globalThis`.** A bundler emits the client module
+  into more than one route chunk, so a plain module-level singleton quietly
+  becomes several. Against Supabase that only wastes connections; against the
+  local file-backed database the copies diverge, and a session written by a
+  server action is invisible to the page that follows it.
+- **Loading entertainers is batched.** A list query fetches genres, travel
+  cities, rates and calendars for the whole page in one query each. Per row, one
+  search was fifty round trips.
+- **Postgres returns `bigint` and `count(*)` as strings**, to avoid losing
+  precision in JavaScript. `num()` in the repository layer is where that stops.
+
+### Deploying
+
+`npm run db:push` applies the schema and seeds the demo data **only if the
+database has no accounts in it**, so the first deploy bootstraps itself and no
+later deploy can wipe real bookings. It is the Vercel build command, ahead of
+`next build`.
+
+The Supabase project needs `DATABASE_URL` set in the Vercel environment — the
+transaction pooler (port 6543), which is what suits serverless.
+
+**The `public` schema is locked against Supabase's Data API.** Supabase
+publishes it over PostgREST, so without this every table — password hashes and
+session tokens included — would be readable with the project's anon key. The
+schema enables row level security on every table and defines no policies, which
+denies that API outright; the app is unaffected because it connects as the table
+owner, which bypasses RLS.
 
 ## The rules worth knowing
 

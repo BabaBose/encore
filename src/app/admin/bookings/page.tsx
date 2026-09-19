@@ -14,7 +14,7 @@ export default async function AdminBookingsPage() {
   const user = await requireRole('admin');
   const { badges } = await pageContext();
   const db = getDb();
-  const inquiries = repo.listAllInquiries(db);
+  const inquiries = await repo.listAllInquiries(db);
 
   // Cancellations after a confirmation are what disputes are usually about.
   const disputes = inquiries.filter((i) => i.status === 'cancelled' && i.cancelReason);

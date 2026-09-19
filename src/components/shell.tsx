@@ -6,7 +6,6 @@
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
 import { BRAND_NAME } from '@/lib/brand';
-import { isEphemeral } from '@/db/client';
 import type { SessionUser } from '@/lib/auth';
 
 export interface NavItem {
@@ -116,17 +115,6 @@ export function Shell({
         </div>
       </nav>
       <main className="main">
-        {/*
-          On an ephemeral deployment the database lives in /tmp and is reclaimed
-          with the instance. Nobody should discover that by losing an account,
-          so the deployment says so on every page.
-        */}
-        {isEphemeral() ? (
-          <div className="demo-bar" role="status">
-            <strong>Preview deployment.</strong> Anything you create here — accounts, inquiries, bookings —
-            resets when the server restarts. Sign in with the demo accounts to look around.
-          </div>
-        ) : null}
         {children}
       </main>
     </div>

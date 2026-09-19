@@ -64,14 +64,14 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const { user, badges } = await pageContext();
 
   const db = getDb();
-  const cities = repo.listCities(db);
-  const categories = repo.topCategories(db);
-  const pool = repo.liveEntertainers(db);
+  const cities = await repo.listCities(db);
+  const categories = await repo.topCategories(db);
+  const pool = await repo.liveEntertainers(db);
   const outcome = searchEntertainers(pool, query, { cities, today: today() });
 
   const longTerm = query.gigType === 'long_term';
   const genreOptions = query.category
-    ? repo.genresFor(db, `cat_${query.category}`)
+    ? await repo.genresFor(db, `cat_${query.category}`)
     : [];
 
   // Keep the current filters when only the toggle changes.

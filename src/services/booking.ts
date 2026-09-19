@@ -94,16 +94,16 @@ export function inquiryRange(inquiry: {
   return { start: inquiry.startDate, end: inquiry.endDate ?? inquiry.startDate };
 }
 
-export function sendInquiry(db: Db, draft: InquiryDraft): string {
-  const entertainer = repo.getEntertainerById(db, draft.entertainerId);
+export async function sendInquiry(db: Db, draft: InquiryDraft): Promise<string> {
+  const entertainer = await repo.getEntertainerById(db, draft.entertainerId);
   if (!entertainer) throw new Error('No such entertainer');
   if (!entertainer.isLive) throw new Error('This profile is not accepting inquiries');
 
   const quote = quoteFor(entertainer.rateCard, draft);
   const offer = draft.offerAmount ?? quote.amount;
 
-  const send = db.transaction(() => {
-    const id = repo.createInquiry(db, {
+  return db.transaction(async (tx) => {
+    const id = await repo.createInquiry(tx, {
       venueId: draft.venueId,
       entertainerId: draft.entertainerId,
       gigType: draft.gigType,
@@ -122,12 +122,12 @@ export function sendInquiry(db: Db, draft: InquiryDraft): string {
       rateBasis: quote.basis,
     });
 
-    const venue = repo.getVenueById(db, draft.venueId);
+    const venue = await repo.getVenueById(tx, draft.venueId);
     const title = `New inquiry from ${venue?.name ?? 'a venue'}`;
     const body = `${quote.label} · ${formatMoney(offer, quote.currency)}`;
-    repo.notify(db, { userId: entertainer.userId, kind: 'inquiry_received', title, body, link: `/app/inquiries/${id}` });
+    await repo.notify(tx, { userId: entertainer.userId, kind: 'inquiry_received', title, body, link: `/app/inquiries/${id}` });
     if (entertainer.managedByUserId) {
-      repo.notify(db, {
+      await repo.notify(tx, {
         userId: entertainer.managedByUserId,
         kind: 'inquiry_received',
         title: `${entertainer.stageName}: ${title.toLowerCase()}`,
@@ -137,8 +137,6 @@ export function sendInquiry(db: Db, draft: InquiryDraft): string {
     }
     return id;
   });
-
-  return send();
 }
 
 export interface TransitionRequest {
@@ -167,8 +165,8 @@ export class BookingConflictError extends Error {
  * hands; this function carries that out against the database and tells both
  * parties.
  */
-export function transitionInquiry(db: Db, req: TransitionRequest): InquiryStatus {
-  const inquiry = repo.getInquiry(db, req.inquiryId);
+export async function transitionInquiry(db: Db, req: TransitionRequest): Promise<InquiryStatus> {
+  const inquiry = await repo.getInquiry(db, req.inquiryId);
   if (!inquiry) throw new Error('No such inquiry');
 
   const outcome = applyTransition({
@@ -179,11 +177,11 @@ export function transitionInquiry(db: Db, req: TransitionRequest): InquiryStatus
     offer: req.offer,
   });
 
-  const run = db.transaction(() => {
+  return db.transaction(async (tx) => {
     if (outcome.holdsDates) {
       const range = inquiryRange(inquiry);
       if (!range) throw new Error('This inquiry has no dates to confirm');
-      const existing = repo.loadBlocks(db, inquiry.entertainerId);
+      const existing = await repo.loadBlocks(tx, inquiry.entertainerId);
       try {
         const block = blockForBooking(existing, {
           id: inquiry.id,
@@ -191,20 +189,20 @@ export function transitionInquiry(db: Db, req: TransitionRequest): InquiryStatus
           end: range.end,
           note: `${inquiry.venueName} · ${STATUS_LABEL[req.to]}`,
         });
-        repo.insertBlock(db, inquiry.entertainerId, block);
+        await repo.insertBlock(tx, inquiry.entertainerId, block);
       } catch (err) {
         if (err instanceof DoubleBookingError) throw new BookingConflictError(err.conflicts);
         throw err;
       }
     }
 
-    if (outcome.releasesDates) repo.deleteBookingBlocks(db, inquiry.id);
+    if (outcome.releasesDates) await repo.deleteBookingBlocks(tx, inquiry.id);
 
-    repo.updateInquiryStatus(db, inquiry.id, outcome.status, {
+    await repo.updateInquiryStatus(tx, inquiry.id, outcome.status, {
       offerAmount: outcome.offer,
       cancelReason: outcome.status === 'cancelled' || outcome.status === 'declined' ? outcome.reason : null,
     });
-    repo.recordInquiryEvent(db, {
+    await repo.recordInquiryEvent(tx, {
       inquiryId: inquiry.id,
       from: inquiry.status,
       to: outcome.status,
@@ -214,20 +212,18 @@ export function transitionInquiry(db: Db, req: TransitionRequest): InquiryStatus
       offer: outcome.offer,
     });
 
-    notifyBothParties(db, inquiry, outcome.status, outcome.offer, outcome.reason);
+    await notifyBothParties(tx, inquiry, outcome.status, outcome.offer, outcome.reason);
     return outcome.status;
   });
-
-  return run();
 }
 
-function notifyBothParties(
+async function notifyBothParties(
   db: Db,
   inquiry: repo.InquiryRow,
   status: InquiryStatus,
   offer: number | null,
   reason: string | null,
-): void {
+): Promise<void> {
   const link = `/app/inquiries/${inquiry.id}`;
   const amount = formatMoney(offer ?? inquiry.offerAmount, inquiry.currency);
   const whenLabel = inquiry.gigType === 'long_term' ? `${inquiry.months}-month residency` : inquiry.startDate ?? '';
@@ -266,14 +262,14 @@ function notifyBothParties(
   const pair = messages[status];
   if (!pair) return;
 
-  repo.notify(db, {
+  await repo.notify(db, {
     userId: inquiry.venueUserId,
     kind: `inquiry_${status}`,
     title: pair.venue,
     body: `${whenLabel} · ${amount}`,
     link,
   });
-  repo.notify(db, {
+  await repo.notify(db, {
     userId: inquiry.entertainerUserId,
     kind: `inquiry_${status}`,
     title: pair.entertainer,
@@ -282,7 +278,7 @@ function notifyBothParties(
   });
   // An agency handling the act's calendar needs to hear it too.
   if (inquiry.entertainerManagerId) {
-    repo.notify(db, {
+    await repo.notify(db, {
       userId: inquiry.entertainerManagerId,
       kind: `inquiry_${status}`,
       title: `${inquiry.entertainerName}: ${pair.entertainer}`,
@@ -293,39 +289,44 @@ function notifyBothParties(
 }
 
 /** Post-gig verified review, only ever from a completed booking. */
-export function leaveReview(
+export async function leaveReview(
   db: Db,
   input: { inquiryId: string; venueUserId: string; rating: number; body: string },
-): void {
-  const inquiry = repo.getInquiry(db, input.inquiryId);
+): Promise<void> {
+  const inquiry = await repo.getInquiry(db, input.inquiryId);
   if (!inquiry) throw new Error('No such inquiry');
   if (inquiry.venueUserId !== input.venueUserId) throw new Error('Only the booking venue can review this gig');
   if (inquiry.status !== 'completed') throw new Error('A review can only follow a completed booking');
-  if (repo.reviewForInquiry(db, input.inquiryId)) throw new Error('This booking has already been reviewed');
+  if (await repo.reviewForInquiry(db, input.inquiryId)) throw new Error('This booking has already been reviewed');
   if (!Number.isInteger(input.rating) || input.rating < 1 || input.rating > 5) {
     throw new RangeError('A rating must be a whole number from 1 to 5');
   }
 
-  db.transaction(() => {
-    repo.createReview(db, {
+  await db.transaction(async (tx) => {
+    await repo.createReview(tx, {
       inquiryId: inquiry.id,
       entertainerId: inquiry.entertainerId,
       venueId: inquiry.venueId,
       rating: input.rating,
       body: input.body,
     });
-    repo.notify(db, {
+    await repo.notify(tx, {
       userId: inquiry.entertainerUserId,
       kind: 'review_received',
       title: `${inquiry.venueName} left you a ${input.rating}-star review`,
       body: input.body.slice(0, 140),
       link: `/entertainers/${inquiry.entertainerSlug}`,
     });
-  })();
+  });
 }
 
-export function postMessage(db: Db, inquiryId: string, senderUserId: string, body: string): void {
-  const inquiry = repo.getInquiry(db, inquiryId);
+export async function postMessage(
+  db: Db,
+  inquiryId: string,
+  senderUserId: string,
+  body: string,
+): Promise<void> {
+  const inquiry = await repo.getInquiry(db, inquiryId);
   if (!inquiry) throw new Error('No such inquiry');
   const trimmed = body.trim();
   if (!trimmed) throw new Error('A message cannot be empty');
@@ -334,16 +335,16 @@ export function postMessage(db: Db, inquiryId: string, senderUserId: string, bod
     senderUserId === inquiry.venueUserId ? inquiry.entertainerUserId : inquiry.venueUserId;
   const senderName = senderUserId === inquiry.venueUserId ? inquiry.venueName : inquiry.entertainerName;
 
-  db.transaction(() => {
-    repo.addMessage(db, inquiryId, senderUserId, trimmed);
-    repo.notify(db, {
+  await db.transaction(async (tx) => {
+    await repo.addMessage(tx, inquiryId, senderUserId, trimmed);
+    await repo.notify(tx, {
       userId: recipientId,
       kind: 'message',
       title: `New message from ${senderName}`,
       body: trimmed.slice(0, 140),
       link: `/app/inquiries/${inquiryId}`,
     });
-  })();
+  });
 }
 
 /** Who is allowed to see or act on this inquiry. */

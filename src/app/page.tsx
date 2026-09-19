@@ -50,9 +50,12 @@ function nextNye(from: string): string {
 export default async function HomePage() {
   const { user, badges } = await pageContext();
   const db = getDb();
-  const acts = repo.liveEntertainers(db);
+  const acts = await repo.liveEntertainers(db);
   const now = today();
   const nye = nextNye(now);
+
+  const categories = await repo.topCategories(db);
+  const genresPerCategory = await Promise.all(categories.map((c) => repo.genresFor(db, c.id)));
 
   const featured = acts.filter((a) => a.featured).slice(0, 3);
   const hero = featured[0] ?? acts[0];
@@ -147,7 +150,7 @@ export default async function HomePage() {
         <section>
           <SectionHead title="Browse by category" />
           <div className="grid grid--cards">
-            {repo.topCategories(db).map((cat) => {
+            {categories.map((cat, i) => {
               const count = acts.filter((a) => a.category === cat.slug).length;
               return (
                 <Link
@@ -163,7 +166,7 @@ export default async function HomePage() {
                     </span>
                   </div>
                   <div className="row row--tight" style={{ marginTop: 10 }}>
-                    {repo.genresFor(db, cat.id).slice(0, 3).map((g) => (
+                    {genresPerCategory[i].slice(0, 3).map((g) => (
                       <Chip key={g.id}>{g.label}</Chip>
                     ))}
                   </div>

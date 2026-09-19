@@ -1,46 +1,71 @@
 import { describe, expect, it } from 'vitest';
-import { migrate, openDatabase } from '@/db/client';
+import { PGlite } from '@electric-sql/pglite';
+import { migrate, type Sql } from '@/db/client';
 
 /**
  * `schema.sql` only ever creates tables that do not exist, so a column added
  * after launch reaches an existing database through the additive migrations in
  * `migrate`. This is the check that they actually run.
  */
-describe('additive migrations', () => {
-  function columns(db: ReturnType<typeof openDatabase>, table: string): string[] {
-    return (db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>).map((r) => r.name);
-  }
+function wrap(pg: PGlite): Sql {
+  return {
+    async query<R>(text: string, params: unknown[] = []) {
+      const result = await pg.query(text, params as never[]);
+      return { rows: result.rows as R[] };
+    },
+    async exec(sql: string) {
+      await pg.exec(sql);
+    },
+    async transaction<T>(fn: (tx: Sql) => Promise<T>): Promise<T> {
+      return fn(wrap(pg));
+    },
+    async close() {
+      await pg.close();
+    },
+  };
+}
 
-  it('adds a missing column to a database that predates it', () => {
-    const db = openDatabase(':memory:');
-    // The entertainers table as it stood before the residency setting existed:
-    // the same columns the schema's indexes reference, minus the new one.
-    db.exec(`CREATE TABLE entertainers (
+async function columns(db: Sql, table: string): Promise<string[]> {
+  const { rows } = await db.query<{ column_name: string }>(
+    'SELECT column_name FROM information_schema.columns WHERE table_name = $1',
+    [table],
+  );
+  return rows.map((r) => r.column_name);
+}
+
+describe('additive migrations', () => {
+  it('adds a missing column to a database that predates it', async () => {
+    const pg = await new PGlite();
+    const db = wrap(pg);
+
+    // The entertainers table as it stood before the residency setting existed.
+    await db.query(`CREATE TABLE entertainers (
       id TEXT PRIMARY KEY, user_id TEXT, managed_by_user_id TEXT, slug TEXT, stage_name TEXT,
       home_city_id TEXT, status TEXT NOT NULL DEFAULT 'draft', created_at TEXT, updated_at TEXT
     )`);
-    db.prepare(
+    await db.query(
       "INSERT INTO entertainers (id, user_id, slug, stage_name, created_at, updated_at) VALUES ('e1','u1','a','A','now','now')",
-    ).run();
-    expect(columns(db, 'entertainers')).not.toContain('residency_inquiry_policy');
+    );
+    expect(await columns(db, 'entertainers')).not.toContain('residency_inquiry_policy');
 
-    migrate(db);
+    await migrate(db);
 
-    expect(columns(db, 'entertainers')).toContain('residency_inquiry_policy');
+    expect(await columns(db, 'entertainers')).toContain('residency_inquiry_policy');
     // The existing row keeps working and takes the cautious default.
-    const row = db.prepare('SELECT residency_inquiry_policy AS p FROM entertainers WHERE id = ?').get('e1') as {
-      p: string;
-    };
-    expect(row.p).toBe('when_largely_free');
-    db.close();
+    const { rows } = await db.query<{ p: string }>('SELECT residency_inquiry_policy AS p FROM entertainers WHERE id = $1', [
+      'e1',
+    ]);
+    expect(rows[0].p).toBe('when_largely_free');
+    await db.close();
   });
 
-  it('is idempotent — running it twice changes nothing', () => {
-    const db = openDatabase(':memory:');
-    migrate(db);
-    const before = columns(db, 'entertainers');
-    expect(() => migrate(db)).not.toThrow();
-    expect(columns(db, 'entertainers')).toEqual(before);
-    db.close();
+  it('is idempotent — running it twice changes nothing', async () => {
+    const pg = await new PGlite();
+    const db = wrap(pg);
+    await migrate(db);
+    const before = await columns(db, 'entertainers');
+    await expect(migrate(db)).resolves.not.toThrow();
+    expect(await columns(db, 'entertainers')).toEqual(before);
+    await db.close();
   });
 });

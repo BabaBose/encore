@@ -1,8 +1,7 @@
 node_modules/
 .next/
 out/
-data/*.db
-data/*.db-*
+data/
 e2e-check.mjs
 policy-check.mjs
 brand-check.mjs

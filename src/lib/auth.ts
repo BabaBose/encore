@@ -26,7 +26,7 @@ export interface SessionUser {
 export async function startSession(userId: string): Promise<void> {
   const token = randomBytes(32).toString('hex');
   const expires = new Date(Date.now() + SESSION_DAYS * 86_400_000);
-  repo.createSession(getDb(), token, userId, expires.toISOString());
+  await repo.createSession(getDb(), token, userId, expires.toISOString());
   const jar = await cookies();
   jar.set(SESSION_COOKIE, token, {
     httpOnly: true,
@@ -40,7 +40,7 @@ export async function startSession(userId: string): Promise<void> {
 export async function endSession(): Promise<void> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
-  if (token) repo.deleteSession(getDb(), token);
+  if (token) await repo.deleteSession(getDb(), token);
   jar.delete(SESSION_COOKIE);
 }
 
@@ -48,7 +48,7 @@ export async function currentUser(): Promise<SessionUser | null> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  const user = repo.findSessionUser(getDb(), token);
+  const user = await repo.findSessionUser(getDb(), token);
   if (!user) return null;
   return { id: user.id, email: user.email, role: user.role, displayName: user.displayName };
 }

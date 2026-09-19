@@ -19,12 +19,15 @@ export default async function ModerationPage() {
   const { badges } = await pageContext();
   const db = getDb();
 
-  const references = repo.referencesAwaitingModeration(db);
-  const pendingMedia = repo
-    .allEntertainers(db)
-    .flatMap((act) =>
-      repo.listMedia(db, act.id).filter((m) => m.moderation === 'pending').map((m) => ({ ...m, act })),
-    );
+  const references = await repo.referencesAwaitingModeration(db);
+
+  // Fetched before render rather than inside it: one query per act is fine at
+  // this scale, but it has to happen here, not in the middle of the markup.
+  const acts = await repo.allEntertainers(db);
+  const mediaPerAct = await Promise.all(acts.map((act) => repo.listMedia(db, act.id)));
+  const pendingMedia = acts.flatMap((act, i) =>
+    mediaPerAct[i].filter((m) => m.moderation === 'pending').map((m) => ({ ...m, act })),
+  );
 
   return (
     <Shell user={user} current="/admin/moderation" badges={badges}>

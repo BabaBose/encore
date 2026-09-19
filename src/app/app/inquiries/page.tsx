@@ -39,20 +39,27 @@ export default async function InquiriesPage() {
 
   let inquiries: InquiryRow[] = [];
   if (user.role === 'venue') {
-    const venue = repo.getVenueForUser(db, user.id);
-    inquiries = venue ? repo.listInquiriesForVenue(db, venue.id) : [];
+    const venue = await repo.getVenueForUser(db, user.id);
+    inquiries = venue ? await repo.listInquiriesForVenue(db, venue.id) : [];
   } else if (user.role === 'entertainer') {
-    const act = repo.getEntertainerForUser(db, user.id);
-    inquiries = act ? repo.listInquiriesForEntertainer(db, act.id) : [];
+    const act = await repo.getEntertainerForUser(db, user.id);
+    inquiries = act ? await repo.listInquiriesForEntertainer(db, act.id) : [];
   } else if (user.role === 'agency') {
-    inquiries = repo
-      .getEntertainersManagedBy(db, user.id)
-      .flatMap((act) => repo.listInquiriesForEntertainer(db, act.id));
+    const roster = await repo.getEntertainersManagedBy(db, user.id);
+    const perAct = await Promise.all(roster.map((act) => repo.listInquiriesForEntertainer(db, act.id)));
+    inquiries = perAct.flat();
   } else {
-    inquiries = repo.listAllInquiries(db);
+    inquiries = await repo.listAllInquiries(db);
   }
 
   const counterpart = (i: InquiryRow) => (user.role === 'venue' ? i.entertainerName : i.venueName);
+
+  // Unread counts for the whole page in one pass, so the markup does no I/O.
+  const unreadByInquiry = new Map(
+    await Promise.all(
+      inquiries.map(async (i) => [i.id, await repo.unreadCount(db, i.id, user.id)] as const),
+    ),
+  );
 
   return (
     <Shell user={user} current="/app/inquiries" badges={badges}>
@@ -94,7 +101,7 @@ export default async function InquiriesPage() {
                   </div>
                   <div className="listing">
                     {rows.map((i) => {
-                      const unread = repo.unreadCount(db, i.id, user.id);
+                      const unread = unreadByInquiry.get(i.id) ?? 0;
                       return (
                         <Link
                           key={i.id}

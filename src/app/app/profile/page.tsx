@@ -25,7 +25,7 @@ export default async function ProfileEditorPage({
   const db = getDb();
 
   const actId = typeof sp.act === 'string' ? sp.act : undefined;
-  const act = actId ? repo.getEntertainerById(db, actId) : repo.getEntertainerForUser(db, user.id);
+  const act = actId ? await repo.getEntertainerById(db, actId) : await repo.getEntertainerForUser(db, user.id);
   if (!act || (act.userId !== user.id && act.managedByUserId !== user.id)) {
     return (
       <Shell user={user} current="/app/profile" badges={badges}>
@@ -36,13 +36,13 @@ export default async function ProfileEditorPage({
     );
   }
 
-  const categories = repo.topCategories(db);
-  const genres = repo.listCategories(db).filter((c) => c.parentId !== null);
-  const cities = repo.listCities(db);
-  const requirements = goLiveRequirements(draftFor(db, act.id));
-  const videos = repo.listMedia(db, act.id, 'video');
-  const references = repo.listReferences(db, act.id, false);
-  const awards = repo.listAwards(db, act.id);
+  const categories = await repo.topCategories(db);
+  const genres = (await repo.listCategories(db)).filter((c) => c.parentId !== null);
+  const cities = await repo.listCities(db);
+  const requirements = goLiveRequirements(await draftFor(db, act.id));
+  const videos = await repo.listMedia(db, act.id, 'video');
+  const references = await repo.listReferences(db, act.id, false);
+  const awards = await repo.listAwards(db, act.id);
 
   return (
     <Shell user={user} current="/app/profile" badges={badges}>

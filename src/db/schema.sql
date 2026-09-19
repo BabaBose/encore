@@ -1,9 +1,9 @@
--- Book the Act schema.
+-- Book the Act schema (PostgreSQL).
 --
 -- Money is stored as integer minor units (fils) and dates as bare
--- `YYYY-MM-DD` text, matching the domain layer. Timestamps are ISO-8601 UTC.
-
-PRAGMA foreign_keys = ON;
+-- `YYYY-MM-DD` text, matching the domain layer. Timestamps are ISO-8601 UTC
+-- text rather than timestamptz, so a row round-trips through the app unchanged
+-- and the date helpers stay the single place date arithmetic happens.
 
 -- ---------------------------------------------------------------- accounts --
 
@@ -33,8 +33,8 @@ CREATE TABLE IF NOT EXISTS cities (
   id       TEXT PRIMARY KEY,
   name     TEXT NOT NULL,
   country  TEXT NOT NULL,
-  lat      REAL NOT NULL,
-  lng      REAL NOT NULL
+  lat      DOUBLE PRECISION NOT NULL,
+  lng      DOUBLE PRECISION NOT NULL
 );
 
 -- Admin-managed. Top-level categories carry no parent; genres hang off one.
@@ -77,13 +77,13 @@ CREATE TABLE IF NOT EXISTS entertainers (
   status              TEXT NOT NULL DEFAULT 'draft'
                         CHECK (status IN ('draft','pending_review','live','suspended')),
   review_note         TEXT,
-  verified            INTEGER NOT NULL DEFAULT 0,
-  featured            INTEGER NOT NULL DEFAULT 0,
+  verified            BOOLEAN NOT NULL DEFAULT FALSE,
+  featured            BOOLEAN NOT NULL DEFAULT FALSE,
 
   -- The two availability modes, set independently; both can be on at once.
-  accepts_short_term  INTEGER NOT NULL DEFAULT 1,
-  accepts_long_term   INTEGER NOT NULL DEFAULT 0,
-  open_to_relocate    INTEGER NOT NULL DEFAULT 0,
+  accepts_short_term  BOOLEAN NOT NULL DEFAULT TRUE,
+  accepts_long_term   BOOLEAN NOT NULL DEFAULT FALSE,
+  open_to_relocate    BOOLEAN NOT NULL DEFAULT FALSE,
   contract_lengths    TEXT NOT NULL DEFAULT '[]', -- JSON array of months
   -- Whether a calendar with dates already in the window takes this act out of
   -- residency searches. The act decides; a busy window is not a refusal.
@@ -154,13 +154,13 @@ CREATE TABLE IF NOT EXISTS references_quotes (
 CREATE TABLE IF NOT EXISTS rate_cards (
   entertainer_id        TEXT PRIMARY KEY REFERENCES entertainers(id) ON DELETE CASCADE,
   currency              TEXT NOT NULL DEFAULT 'AED',
-  base_hourly           INTEGER NOT NULL DEFAULT 0,
+  base_hourly           BIGINT NOT NULL DEFAULT 0,
   minimum_hours         INTEGER NOT NULL DEFAULT 1,
-  residency_weekly      INTEGER,
-  residency_monthly     INTEGER,
+  residency_weekly      BIGINT,
+  residency_monthly     BIGINT,
   days_per_week_included INTEGER NOT NULL DEFAULT 5,
-  extra_day_rate        INTEGER,
-  published             INTEGER NOT NULL DEFAULT 0,
+  extra_day_rate        BIGINT,
+  published             BOOLEAN NOT NULL DEFAULT FALSE,
   updated_at            TEXT NOT NULL
 );
 
@@ -170,7 +170,7 @@ CREATE TABLE IF NOT EXISTS rate_rules (
   entertainer_id TEXT NOT NULL REFERENCES entertainers(id) ON DELETE CASCADE,
   weekday        INTEGER NOT NULL CHECK (weekday BETWEEN 0 AND 6),  -- 0 = Monday
   time_block     TEXT NOT NULL CHECK (time_block IN ('daytime','evening','late_night')),
-  hourly         INTEGER NOT NULL,
+  hourly         BIGINT NOT NULL,
   minimum_hours  INTEGER,
   UNIQUE (entertainer_id, weekday, time_block)
 );
@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS special_date_rates (
   entertainer_id TEXT NOT NULL REFERENCES entertainers(id) ON DELETE CASCADE,
   date           TEXT NOT NULL,
   label          TEXT NOT NULL,
-  hourly         INTEGER NOT NULL,
+  hourly         BIGINT NOT NULL,
   minimum_hours  INTEGER,
   UNIQUE (entertainer_id, date)
 );
@@ -246,7 +246,7 @@ CREATE TABLE IF NOT EXISTS inquiries (
   start_date      TEXT,
   end_date        TEXT,
   time_block      TEXT,
-  hours           REAL,
+  hours           DOUBLE PRECISION,
 
   -- Long-term: a duration with a target start, per the spec.
   months          INTEGER,
@@ -258,8 +258,8 @@ CREATE TABLE IF NOT EXISTS inquiries (
 
   -- What the rate rules resolved to, and what is actually on the table now.
   currency        TEXT NOT NULL DEFAULT 'AED',
-  quoted_amount   INTEGER NOT NULL,
-  offer_amount    INTEGER NOT NULL,
+  quoted_amount   BIGINT NOT NULL,
+  offer_amount    BIGINT NOT NULL,
   rate_basis      TEXT NOT NULL DEFAULT 'hourly',
 
   status          TEXT NOT NULL DEFAULT 'new'
@@ -282,7 +282,7 @@ CREATE TABLE IF NOT EXISTS inquiry_events (
   actor       TEXT NOT NULL,
   actor_id    TEXT,
   reason      TEXT,
-  offer       INTEGER,
+  offer       BIGINT,
   created_at  TEXT NOT NULL
 );
 
@@ -346,3 +346,28 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+
+-- ------------------------------------------------------------ data API lock --
+
+-- Supabase publishes the `public` schema through PostgREST, so without this
+-- every table here — password hashes and session tokens included — would be
+-- readable with the project's anon key.
+--
+-- The app does not use that API at all: it connects over Postgres as the table
+-- owner, which bypasses RLS. Enabling RLS and defining no policies therefore
+-- shuts the HTTP door completely while leaving the app untouched. The REVOKE
+-- is belt and braces, so a permissive policy added later still grants nothing
+-- on its own.
+DO $$
+DECLARE
+  t text;
+BEGIN
+  FOR t IN
+    SELECT tablename FROM pg_tables WHERE schemaname = 'public'
+  LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+      EXECUTE format('REVOKE ALL ON public.%I FROM anon, authenticated', t);
+    END IF;
+  END LOOP;
+END $$;

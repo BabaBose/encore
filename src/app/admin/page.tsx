@@ -22,9 +22,18 @@ export default async function AdminPage() {
   const { badges } = await pageContext();
   const db = getDb();
 
-  const pending = repo.entertainersAwaitingReview(db);
-  const all = repo.allEntertainers(db);
+  const pending = await repo.entertainersAwaitingReview(db);
+  const all = await repo.allEntertainers(db);
   const live = all.filter((a) => a.status === 'live');
+
+  // Everything the queue needs about each waiting profile, gathered up front.
+  const queue = await Promise.all(
+    pending.map(async (act) => ({
+      act,
+      requirements: goLiveRequirements(await draftFor(db, act.id)),
+      videos: await repo.listMedia(db, act.id, 'video'),
+    })),
+  );
 
   return (
     <Shell user={user} current="/admin" badges={badges}>
@@ -41,10 +50,8 @@ export default async function AdminPage() {
           <SectionHead title="Waiting on review" note={`${pending.length} profile${pending.length === 1 ? '' : 's'}`} />
           {pending.length ? (
             <div className="stack" style={{ gap: 14 }}>
-              {pending.map((act) => {
-                const requirements = goLiveRequirements(draftFor(db, act.id));
+              {queue.map(({ act, requirements, videos }) => {
                 const unmet = requirements.filter((r) => !r.met);
-                const videos = repo.listMedia(db, act.id, 'video');
                 return (
                   <div key={act.id} className="card stack" style={{ gap: 14, ...accentStyle(act.heroAccent) }}>
                     <div className="spread">

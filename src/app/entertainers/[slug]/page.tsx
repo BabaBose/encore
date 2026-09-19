@@ -35,7 +35,7 @@ export default async function ProfilePage({
   const { user, badges } = await pageContext();
 
   const db = getDb();
-  const act = repo.getEntertainerBySlug(db, slug);
+  const act = await repo.getEntertainerBySlug(db, slug);
   if (!act) notFound();
 
   const viewerOwnsIt = user?.id === act.userId || user?.id === act.managedByUserId;
@@ -43,12 +43,12 @@ export default async function ProfilePage({
   // A profile that is not live is visible only to its owner and to admin.
   if (!isDiscoverable(act.status) && !viewerOwnsIt && !viewerIsAdmin) notFound();
 
-  const videos = repo.listPublicMedia(db, act.id, 'video');
-  const photos = repo.listPublicMedia(db, act.id, 'photo');
-  const awards = repo.listAwards(db, act.id);
-  const references = repo.listReferences(db, act.id);
-  const reviews = repo.listReviews(db, act.id);
-  const cities = repo.listCities(db);
+  const videos = await repo.listPublicMedia(db, act.id, 'video');
+  const photos = await repo.listPublicMedia(db, act.id, 'photo');
+  const awards = await repo.listAwards(db, act.id);
+  const references = await repo.listReferences(db, act.id);
+  const reviews = await repo.listReviews(db, act.id);
+  const cities = await repo.listCities(db);
 
   const now = today();
   const [y, m] = now.split('-').map(Number);
@@ -63,7 +63,8 @@ export default async function ProfilePage({
     return { year: anchorYear + Math.floor(total / 12), month: (total % 12) + 1 };
   });
 
-  const shortlists = user?.role === 'venue' ? repo.listShortlists(db, repo.getVenueForUser(db, user.id)?.id ?? '') : [];
+  const viewerVenue = user?.role === 'venue' ? await repo.getVenueForUser(db, user.id) : null;
+  const shortlists = viewerVenue ? await repo.listShortlists(db, viewerVenue.id) : [];
 
   return (
     <Shell user={user} current="/search" badges={badges}>

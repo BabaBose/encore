@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function SignUpPage() {
   if (await currentUser()) redirect('/app');
-  const cities = repo.listCities(getDb());
+  const cities = await repo.listCities(getDb());
   return (
     <Shell user={null} current="/signup">
       <div className="page" style={{ maxWidth: 480 }}>

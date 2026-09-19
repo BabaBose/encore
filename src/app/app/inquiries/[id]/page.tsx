@@ -25,7 +25,7 @@ export default async function InquiryPage({ params }: { params: Promise<{ id: st
   const { badges } = await pageContext();
 
   const db = getDb();
-  const inquiry = repo.getInquiry(db, id);
+  const inquiry = await repo.getInquiry(db, id);
   if (!inquiry) notFound();
 
   const actor = accessRoleFor(inquiry, user);
@@ -35,15 +35,15 @@ export default async function InquiryPage({ params }: { params: Promise<{ id: st
   // what clears its unread count — neither needs a separate button.
   if (actor === 'entertainer' && inquiry.status === 'new') {
     const { transitionInquiry } = await import('@/services/booking');
-    transitionInquiry(db, { inquiryId: id, to: 'viewed', actor, actorUserId: user.id });
+    await transitionInquiry(db, { inquiryId: id, to: 'viewed', actor, actorUserId: user.id });
   }
-  repo.markThreadRead(db, id, user.id);
+  await repo.markThreadRead(db, id, user.id);
 
-  const fresh = repo.getInquiry(db, id)!;
-  const messages = repo.listMessages(db, id);
-  const events = repo.listInquiryEvents(db, id);
+  const fresh = (await repo.getInquiry(db, id))!;
+  const messages = await repo.listMessages(db, id);
+  const events = await repo.listInquiryEvents(db, id);
   const range = inquiryRange(fresh);
-  const existingReview = repo.reviewForInquiry(db, id);
+  const existingReview = await repo.reviewForInquiry(db, id);
 
   return (
     <Shell user={user} current="/app/inquiries" badges={badges}>

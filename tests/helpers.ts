@@ -1,4 +1,5 @@
-import { createTestDb, type Db } from '@/db/client';
+import { createTestDb } from '@/db/pglite';
+import type { Db } from '@/db/client';
 import * as repo from '@/db/repo';
 import { newId } from '@/db/ids';
 import { hashPassword } from '@/lib/auth-core';
@@ -17,30 +18,34 @@ export interface Fixture {
   managerUserId: string;
 }
 
-export function makeFixture(options: { managed?: boolean } = {}): Fixture {
-  const db = createTestDb();
+export async function makeFixture(options: { managed?: boolean } = {}): Promise<Fixture> {
+  const db = await createTestDb();
 
-  db.prepare('INSERT INTO cities (id, name, country, lat, lng) VALUES (?, ?, ?, ?, ?)').run(
+  await db.query('INSERT INTO cities (id, name, country, lat, lng) VALUES ($1, $2, $3, $4, $5)', [
     'dubai',
     'Dubai',
     'AE',
     25.2048,
     55.2708,
-  );
-  const insertCategory = db.prepare(
-    'INSERT INTO categories (id, parent_id, slug, label, accent, sort_order) VALUES (?, ?, ?, ?, ?, ?)',
-  );
-  insertCategory.run('cat_singer', null, 'singer', 'Singer', '#ff5fa2', 0);
-  insertCategory.run('gen_soul', 'cat_singer', 'neo-soul', 'Neo-soul', '#ff5fa2', 0);
+  ]);
+  for (const row of [
+    ['cat_singer', null, 'singer', 'Singer', '#ff5fa2', 0],
+    ['gen_soul', 'cat_singer', 'neo-soul', 'Neo-soul', '#ff5fa2', 0],
+  ]) {
+    await db.query(
+      'INSERT INTO categories (id, parent_id, slug, label, accent, sort_order) VALUES ($1, $2, $3, $4, $5, $6)',
+      row,
+    );
+  }
 
-  const manager = repo.createUser(db, {
+  const manager = await repo.createUser(db, {
     email: 'agency@test',
     passwordHash: hashPassword('password'),
     role: 'agency',
     displayName: 'Test Agency',
   });
 
-  const entUser = repo.createUser(db, {
+  const entUser = await repo.createUser(db, {
     email: 'act@test',
     passwordHash: hashPassword('password'),
     role: 'entertainer',
@@ -48,25 +53,26 @@ export function makeFixture(options: { managed?: boolean } = {}): Fixture {
   });
 
   const entertainerId = newId('ent');
-  db.prepare(
+  await db.query(
     `INSERT INTO entertainers (id, user_id, managed_by_user_id, representation_note, slug, stage_name, short_bio,
                                full_bio, category_id, home_city_id, country_of_origin, cover_accent, status,
                                accepts_short_term, accepts_long_term, open_to_relocate, contract_lengths,
                                created_at, updated_at)
-     VALUES (?, ?, ?, ?, 'test-act', 'Test Act', 'A short bio for cards', 'A full bio that is comfortably long enough to pass the go-live check for length.',
-             'cat_singer', 'dubai', 'AE', '#ff5fa2', 'live', 1, 1, 1, '[3,6]', ?, ?)`,
-  ).run(
-    entertainerId,
-    entUser.id,
-    options.managed ? manager.id : null,
-    options.managed ? 'Represented by Test Agency' : null,
-    new Date().toISOString(),
-    new Date().toISOString(),
+     VALUES ($1, $2, $3, $4, 'test-act', 'Test Act', 'A short bio for cards',
+             'A full bio that is comfortably long enough to pass the go-live check for length.',
+             'cat_singer', 'dubai', 'AE', '#ff5fa2', 'live', TRUE, TRUE, TRUE, '[3,6]', $5, $5)`,
+    [
+      entertainerId,
+      entUser.id,
+      options.managed ? manager.id : null,
+      options.managed ? 'Represented by Test Agency' : null,
+      new Date().toISOString(),
+    ],
   );
 
-  repo.setEntertainerGenres(db, entertainerId, ['gen_soul']);
+  await repo.setEntertainerGenres(db, entertainerId, ['gen_soul']);
 
-  repo.upsertRateCard(db, entertainerId, {
+  await repo.upsertRateCard(db, entertainerId, {
     currency: 'AED',
     baseHourly: 40000,
     minimumHours: 3,
@@ -81,23 +87,23 @@ export function makeFixture(options: { managed?: boolean } = {}): Fixture {
     [3, 'late_night', 62000],
   ];
   for (const [weekday, timeBlock, hourly] of rules) {
-    repo.setRateRule(db, entertainerId, { weekday, timeBlock, hourly });
+    await repo.setRateRule(db, entertainerId, { weekday, timeBlock, hourly });
   }
-  repo.addSpecialDate(db, entertainerId, {
+  await repo.addSpecialDate(db, entertainerId, {
     date: '2026-12-31',
     label: "New Year's Eve",
     hourly: 340000,
     minimumHours: 4,
   });
-  repo.addMedia(db, entertainerId, { kind: 'video', url: 'https://example.test/reel' });
+  await repo.addMedia(db, entertainerId, { kind: 'video', url: 'https://example.test/reel' });
 
-  const venueUser = repo.createUser(db, {
+  const venueUser = await repo.createUser(db, {
     email: 'venue@test',
     passwordHash: hashPassword('password'),
     role: 'venue',
     displayName: 'Test Venue',
   });
-  const venue = repo.createVenue(db, {
+  const venue = await repo.createVenue(db, {
     userId: venueUser.id,
     name: 'Test Venue',
     venueType: 'hotel',

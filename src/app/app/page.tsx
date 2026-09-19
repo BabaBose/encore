@@ -32,7 +32,7 @@ export default async function AppHome() {
 
   if (user.role === 'agency') return <AgencyRoster userId={user.id} badges={badges} user={user} />;
 
-  const act = repo.getEntertainerForUser(db, user.id);
+  const act = await repo.getEntertainerForUser(db, user.id);
   if (!act) {
     return (
       <Shell user={user} current="/app" badges={badges}>
@@ -43,17 +43,17 @@ export default async function AppHome() {
     );
   }
 
-  const inquiries = repo.listInquiriesForEntertainer(db, act.id);
+  const inquiries = await repo.listInquiriesForEntertainer(db, act.id);
   const incoming = inquiries.filter((i) => ['new', 'viewed', 'countered'].includes(i.status));
   const upcoming = inquiries
     .filter((i) => i.status === 'confirmed' && i.startDate && i.startDate >= today())
     .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''));
-  const requirements = goLiveRequirements(draftFor(db, act.id));
+  const requirements = goLiveRequirements(await draftFor(db, act.id));
   const unmet = requirements.filter((r) => !r.met);
 
   const now = today();
   const [y, m] = now.split('-').map(Number);
-  const subscription = repo.getSubscription(db, user.id);
+  const subscription = await repo.getSubscription(db, user.id);
 
   return (
     <Shell user={user} current="/app" badges={badges}>
@@ -251,7 +251,17 @@ async function AgencyRoster({
   user: Awaited<ReturnType<typeof requireUser>>;
 }) {
   const db = getDb();
-  const roster = repo.getEntertainersManagedBy(db, userId);
+  const roster = await repo.getEntertainersManagedBy(db, userId);
+  // How many of each act's inquiries are still waiting on a reply, gathered
+  // before render rather than per row inside it.
+  const openByAct = new Map(
+    await Promise.all(
+      roster.map(async (act) => {
+        const inquiries = await repo.listInquiriesForEntertainer(db, act.id);
+        return [act.id, inquiries.filter((i) => ['new', 'viewed', 'countered'].includes(i.status)).length] as const;
+      }),
+    ),
+  );
 
   return (
     <Shell user={user} current="/app" badges={badges}>
@@ -269,8 +279,7 @@ async function AgencyRoster({
           <div className="panel">
             <div className="listing">
               {roster.map((act) => {
-                const inquiries = repo.listInquiriesForEntertainer(db, act.id);
-                const open = inquiries.filter((i) => ['new', 'viewed', 'countered'].includes(i.status)).length;
+                const open = openByAct.get(act.id) ?? 0;
                 return (
                   <div key={act.id} className="listing__item" style={accentStyle(act.heroAccent)}>
                     <div className="avatar art" style={accentStyle(act.heroAccent)} />

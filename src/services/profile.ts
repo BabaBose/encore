@@ -11,8 +11,8 @@ import { applyProfileTransition, type ProfileDraft } from '@/domain/profile';
 import type { ProfileStatus, UserRole } from '@/domain/types';
 
 /** Assemble the draft the go-live checklist is evaluated against. */
-export function draftFor(db: Db, entertainerId: string): ProfileDraft {
-  const e = repo.getEntertainerById(db, entertainerId);
+export async function draftFor(db: Db, entertainerId: string): Promise<ProfileDraft> {
+  const e = await repo.getEntertainerById(db, entertainerId);
   if (!e) throw new Error('No such entertainer');
   return {
     stageName: e.stageName,
@@ -21,30 +21,30 @@ export function draftFor(db: Db, entertainerId: string): ProfileDraft {
     categoryId: e.category ? e.category : null,
     genres: e.genres,
     homeCityId: e.homeCity.id || null,
-    videoCount: repo.countVideos(db, entertainerId),
+    videoCount: await repo.countVideos(db, entertainerId),
     rateCardPublished: e.rateCardPublished,
     representationDisclosed: !!e.representationNote,
     isAgencyManaged: !!e.managedByUserId,
   };
 }
 
-export function moveProfile(
+export async function moveProfile(
   db: Db,
   args: { entertainerId: string; to: ProfileStatus; role: UserRole; note?: string | null },
-): ProfileStatus {
-  const e = repo.getEntertainerById(db, args.entertainerId);
+): Promise<ProfileStatus> {
+  const e = await repo.getEntertainerById(db, args.entertainerId);
   if (!e) throw new Error('No such entertainer');
 
   const outcome = applyProfileTransition({
     from: e.status,
     to: args.to,
     role: args.role,
-    draft: draftFor(db, args.entertainerId),
+    draft: await draftFor(db, args.entertainerId),
     note: args.note,
   });
 
-  db.transaction(() => {
-    repo.updateEntertainerStatus(db, args.entertainerId, outcome.status, outcome.note);
+  await db.transaction(async (tx) => {
+    await repo.updateEntertainerStatus(tx, args.entertainerId, outcome.status, outcome.note);
 
     // The entertainer is told the outcome of every admin decision, per the
     // spec's "Profile approved / needs changes" notification.
@@ -56,7 +56,7 @@ export function moveProfile(
       };
       const title = titles[outcome.status];
       if (title) {
-        repo.notify(db, {
+        await repo.notify(tx, {
           userId: e.userId,
           kind: 'profile_review',
           title,
@@ -65,18 +65,18 @@ export function moveProfile(
         });
       }
     }
-  })();
+  });
 
   return outcome.status;
 }
 
-export function setVerified(db: Db, entertainerId: string, verified: boolean): void {
-  const e = repo.getEntertainerById(db, entertainerId);
+export async function setVerified(db: Db, entertainerId: string, verified: boolean): Promise<void> {
+  const e = await repo.getEntertainerById(db, entertainerId);
   if (!e) throw new Error('No such entertainer');
-  db.transaction(() => {
-    repo.setEntertainerFlags(db, entertainerId, { verified });
+  await db.transaction(async (tx) => {
+    await repo.setEntertainerFlags(tx, entertainerId, { verified });
     if (verified) {
-      repo.notify(db, {
+      await repo.notify(tx, {
         userId: e.userId,
         kind: 'verified',
         title: 'You are now a verified act on Book the Act',
@@ -84,9 +84,9 @@ export function setVerified(db: Db, entertainerId: string, verified: boolean): v
         link: '/app/profile',
       });
     }
-  })();
+  });
 }
 
-export function setFeatured(db: Db, entertainerId: string, featured: boolean): void {
-  repo.setEntertainerFlags(db, entertainerId, { featured });
+export async function setFeatured(db: Db, entertainerId: string, featured: boolean): Promise<void> {
+  await repo.setEntertainerFlags(db, entertainerId, { featured });
 }

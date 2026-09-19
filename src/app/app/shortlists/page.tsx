@@ -19,8 +19,16 @@ export default async function ShortlistsPage() {
   const user = await requireRole('venue');
   const { badges } = await pageContext();
   const db = getDb();
-  const venue = repo.getVenueForUser(db, user.id);
-  const lists = venue ? repo.listShortlists(db, venue.id) : [];
+  const venue = await repo.getVenueForUser(db, user.id);
+  const lists = venue ? await repo.listShortlists(db, venue.id) : [];
+
+  // Every act across every collection, fetched once and looked up by id.
+  const actIds = [...new Set(lists.flatMap((l) => l.entertainerIds))];
+  const actsById = new Map(
+    (await Promise.all(actIds.map((id) => repo.getEntertainerById(db, id))))
+      .filter((a): a is NonNullable<typeof a> => !!a)
+      .map((a) => [a.id, a] as const),
+  );
 
   return (
     <Shell user={user} current="/app/shortlists" badges={badges}>
@@ -45,7 +53,7 @@ export default async function ShortlistsPage() {
             ) : (
               lists.map((list) => {
                 const acts = list.entertainerIds
-                  .map((id) => repo.getEntertainerById(db, id))
+                  .map((id) => actsById.get(id))
                   .filter((a): a is NonNullable<typeof a> => !!a);
                 return (
                   <section key={list.id}>

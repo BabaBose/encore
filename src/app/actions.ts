@@ -59,7 +59,7 @@ export async function signInAction(_prev: ActionState, data: FormData): Promise<
     const email = str(data, 'email').toLowerCase();
     const password = str(data, 'password');
     const db = getDb();
-    const user = repo.findUserByEmail(db, email);
+    const user = await repo.findUserByEmail(db, email);
     // The same message either way, so this cannot be used to enumerate accounts.
     if (!user || !verifyPassword(password, user.passwordHash)) {
       return { error: 'That email and password do not match' };
@@ -84,9 +84,9 @@ export async function signUpAction(_prev: ActionState, data: FormData): Promise<
     if (!['entertainer', 'venue', 'agency'].includes(role)) return { error: 'Pick an account type' };
 
     const db = getDb();
-    if (repo.findUserByEmail(db, email)) return { error: 'There is already an account with that email' };
+    if (await repo.findUserByEmail(db, email)) return { error: 'There is already an account with that email' };
 
-    const user = repo.createUser(db, {
+    const user = await repo.createUser(db, {
       email,
       passwordHash: hashPassword(password),
       role: role as 'entertainer' | 'venue' | 'agency',
@@ -94,7 +94,7 @@ export async function signUpAction(_prev: ActionState, data: FormData): Promise<
     });
 
     if (role === 'venue') {
-      repo.createVenue(db, {
+      await repo.createVenue(db, {
         userId: user.id,
         name: displayName,
         venueType: str(data, 'venueType') || 'restaurant',
@@ -104,14 +104,16 @@ export async function signUpAction(_prev: ActionState, data: FormData): Promise<
       // A new act starts as a draft with its own empty profile to fill in.
       const id = newId('ent');
       let slug = slugify(displayName) || 'act';
-      if (repo.getEntertainerBySlug(db, slug)) slug = `${slug}-${id.slice(-4)}`;
-      db.prepare(
+      if (await repo.getEntertainerBySlug(db, slug)) slug = `${slug}-${id.slice(-4)}`;
+      const now = new Date().toISOString();
+      await db.query(
         `INSERT INTO entertainers (id, user_id, slug, stage_name, status, created_at, updated_at)
-         VALUES (?, ?, ?, ?, 'draft', ?, ?)`,
-      ).run(id, user.id, slug, displayName, new Date().toISOString(), new Date().toISOString());
-      repo.createSubscription(db, { userId: user.id, plan: 'standard', status: 'trialing', renewsAt: null });
+         VALUES ($1, $2, $3, $4, 'draft', $5, $5)`,
+        [id, user.id, slug, displayName, now],
+      );
+      await repo.createSubscription(db, { userId: user.id, plan: 'standard', status: 'trialing', renewsAt: null });
     } else {
-      repo.createSubscription(db, { userId: user.id, plan: 'agency', status: 'trialing', renewsAt: null });
+      await repo.createSubscription(db, { userId: user.id, plan: 'agency', status: 'trialing', renewsAt: null });
     }
 
     await startSession(user.id);
@@ -132,11 +134,11 @@ export async function createShortlistAction(_prev: ActionState, data: FormData):
   return guard(async () => {
     const user = await requireRole('venue');
     const db = getDb();
-    const venue = repo.getVenueForUser(db, user.id);
+    const venue = await repo.getVenueForUser(db, user.id);
     if (!venue) return { error: 'No venue profile on this account' };
     const name = str(data, 'name');
     if (!name) return { error: 'Give the collection a name' };
-    repo.createShortlist(db, venue.id, name, str(data, 'note') || null);
+    await repo.createShortlist(db, venue.id, name, str(data, 'note') || null);
     revalidatePath('/app/shortlists');
     return { ok: 'Collection created' };
   });
@@ -146,7 +148,7 @@ export async function toggleShortlistAction(_prev: ActionState, data: FormData):
   return guard(async () => {
     const user = await requireRole('venue');
     const db = getDb();
-    const venue = repo.getVenueForUser(db, user.id);
+    const venue = await repo.getVenueForUser(db, user.id);
     if (!venue) return { error: 'No venue profile on this account' };
 
     const entertainerId = str(data, 'entertainerId');
@@ -155,18 +157,18 @@ export async function toggleShortlistAction(_prev: ActionState, data: FormData):
     // Favouriting with no collection chosen creates the default one, so a
     // single tap never dead-ends on "pick a collection first".
     if (!shortlistId) {
-      const lists = repo.listShortlists(db, venue.id);
-      shortlistId = lists[0]?.id ?? repo.createShortlist(db, venue.id, 'Saved acts', null);
+      const lists = await repo.listShortlists(db, venue.id);
+      shortlistId = lists[0]?.id ?? await repo.createShortlist(db, venue.id, 'Saved acts', null);
     }
-    if (!repo.shortlistOwnedBy(db, shortlistId, venue.id)) return { error: 'That collection is not yours' };
+    if (!await repo.shortlistOwnedBy(db, shortlistId, venue.id)) return { error: 'That collection is not yours' };
 
-    const list = repo.listShortlists(db, venue.id).find((l) => l.id === shortlistId);
+    const list = (await repo.listShortlists(db, venue.id)).find((l) => l.id === shortlistId);
     if (list?.entertainerIds.includes(entertainerId)) {
-      repo.removeFromShortlist(db, shortlistId, entertainerId);
+      await repo.removeFromShortlist(db, shortlistId, entertainerId);
       revalidatePath('/app/shortlists');
       return { ok: 'Removed from the collection' };
     }
-    repo.addToShortlist(db, shortlistId, entertainerId);
+    await repo.addToShortlist(db, shortlistId, entertainerId);
     revalidatePath('/app/shortlists');
     return { ok: 'Saved to the collection' };
   });
@@ -179,7 +181,7 @@ export async function sendInquiryAction(_prev: ActionState, data: FormData): Pro
   const result = await guard(async () => {
     const user = await requireRole('venue');
     const db = getDb();
-    const venue = repo.getVenueForUser(db, user.id);
+    const venue = await repo.getVenueForUser(db, user.id);
     if (!venue) return { error: 'No venue profile on this account' };
 
     const gigType = str(data, 'gigType') === 'long_term' ? 'long_term' : 'one_time';
@@ -189,7 +191,7 @@ export async function sendInquiryAction(_prev: ActionState, data: FormData): Pro
     const monthsRaw = num(data, 'months');
     const offerRaw = str(data, 'offer');
 
-    inquiryId = sendInquiry(db, {
+    inquiryId = await sendInquiry(db, {
       venueId: venue.id,
       entertainerId: str(data, 'entertainerId'),
       gigType,
@@ -217,14 +219,14 @@ export async function transitionInquiryAction(_prev: ActionState, data: FormData
     const user = await requireUser();
     const db = getDb();
     const inquiryId = str(data, 'inquiryId');
-    const inquiry = repo.getInquiry(db, inquiryId);
+    const inquiry = await repo.getInquiry(db, inquiryId);
     if (!inquiry) return { error: 'No such inquiry' };
 
     const actor = accessRoleFor(inquiry, user);
     if (!actor) throw new AuthError('This inquiry is not yours');
 
     const offerRaw = str(data, 'offer');
-    transitionInquiry(db, {
+    await transitionInquiry(db, {
       inquiryId,
       to: str(data, 'to') as InquiryStatus,
       actor,
@@ -244,11 +246,11 @@ export async function sendMessageAction(_prev: ActionState, data: FormData): Pro
     const user = await requireUser();
     const db = getDb();
     const inquiryId = str(data, 'inquiryId');
-    const inquiry = repo.getInquiry(db, inquiryId);
+    const inquiry = await repo.getInquiry(db, inquiryId);
     if (!inquiry) return { error: 'No such inquiry' };
     if (!accessRoleFor(inquiry, user)) throw new AuthError('This thread is not yours');
 
-    postMessage(db, inquiryId, user.id, str(data, 'body'));
+    await postMessage(db, inquiryId, user.id, str(data, 'body'));
     revalidatePath(`/app/inquiries/${inquiryId}`);
     return { ok: 'Sent' };
   });
@@ -258,7 +260,7 @@ export async function leaveReviewAction(_prev: ActionState, data: FormData): Pro
   return guard(async () => {
     const user = await requireRole('venue');
     const db = getDb();
-    leaveReview(db, {
+    await leaveReview(db, {
       inquiryId: str(data, 'inquiryId'),
       venueUserId: user.id,
       rating: num(data, 'rating'),
@@ -276,8 +278,8 @@ async function ownEntertainer(entertainerId?: string) {
   const user = await requireRole('entertainer', 'agency');
   const db = getDb();
   const ent = entertainerId
-    ? repo.getEntertainerById(db, entertainerId)
-    : repo.getEntertainerForUser(db, user.id);
+    ? await repo.getEntertainerById(db, entertainerId)
+    : await repo.getEntertainerForUser(db, user.id);
   if (!ent) throw new AuthError('No entertainer profile on this account');
   if (ent.userId !== user.id && ent.managedByUserId !== user.id) {
     throw new AuthError('That profile is not yours to edit');
@@ -290,7 +292,7 @@ export async function saveProfileAction(_prev: ActionState, data: FormData): Pro
     const { db, ent } = await ownEntertainer(str(data, 'entertainerId') || undefined);
 
     const lengths = CONTRACT_LENGTHS.filter((m) => data.getAll('contractLengths').includes(String(m)));
-    repo.updateEntertainerProfile(db, ent.id, {
+    await repo.updateEntertainerProfile(db, ent.id, {
       stageName: str(data, 'stageName') || ent.stageName,
       realName: str(data, 'realName') || null,
       shortBio: str(data, 'shortBio'),
@@ -317,7 +319,7 @@ export async function saveProfileAction(_prev: ActionState, data: FormData): Pro
         : 'when_largely_free',
       representationNote: str(data, 'representationNote') || null,
     });
-    repo.setEntertainerGenres(db, ent.id, data.getAll('genres').map(String).filter(Boolean));
+    await repo.setEntertainerGenres(db, ent.id, data.getAll('genres').map(String).filter(Boolean));
     revalidatePath('/app/profile');
     revalidatePath(`/entertainers/${ent.slug}`);
     return { ok: 'Profile saved' };
@@ -327,7 +329,7 @@ export async function saveProfileAction(_prev: ActionState, data: FormData): Pro
 export async function submitForReviewAction(_prev: ActionState, data: FormData): Promise<ActionState> {
   return guard(async () => {
     const { db, user, ent } = await ownEntertainer(str(data, 'entertainerId') || undefined);
-    moveProfile(db, { entertainerId: ent.id, to: 'pending_review', role: user.role });
+    await moveProfile(db, { entertainerId: ent.id, to: 'pending_review', role: user.role });
     revalidatePath('/app/profile');
     return { ok: 'Sent to Book the Act for review' };
   });
@@ -338,7 +340,7 @@ export async function addMediaAction(_prev: ActionState, data: FormData): Promis
     const { db, ent } = await ownEntertainer(str(data, 'entertainerId') || undefined);
     const url = str(data, 'url');
     if (!/^https?:\/\//i.test(url)) return { error: 'Paste a full https:// link to the video' };
-    repo.addMedia(db, ent.id, { kind: 'video', url, title: str(data, 'title') || undefined, accent: ent.heroAccent });
+    await repo.addMedia(db, ent.id, { kind: 'video', url, title: str(data, 'title') || undefined, accent: ent.heroAccent });
     revalidatePath('/app/profile');
     revalidatePath(`/entertainers/${ent.slug}`);
     return { ok: 'Video added' };
@@ -348,7 +350,7 @@ export async function addMediaAction(_prev: ActionState, data: FormData): Promis
 export async function deleteMediaAction(_prev: ActionState, data: FormData): Promise<ActionState> {
   return guard(async () => {
     const { db, ent } = await ownEntertainer(str(data, 'entertainerId') || undefined);
-    repo.deleteMedia(db, ent.id, str(data, 'mediaId'));
+    await repo.deleteMedia(db, ent.id, str(data, 'mediaId'));
     revalidatePath('/app/profile');
     return { ok: 'Removed' };
   });
@@ -359,7 +361,7 @@ export async function addAwardAction(_prev: ActionState, data: FormData): Promis
     const { db, ent } = await ownEntertainer(str(data, 'entertainerId') || undefined);
     const title = str(data, 'title');
     if (!title) return { error: 'Name the award' };
-    repo.addAward(db, ent.id, { title, issuer: str(data, 'issuer'), year: num(data, 'year') || new Date().getFullYear() });
+    await repo.addAward(db, ent.id, { title, issuer: str(data, 'issuer'), year: num(data, 'year') || new Date().getFullYear() });
     revalidatePath('/app/profile');
     return { ok: 'Award added' };
   });
@@ -370,7 +372,7 @@ export async function addReferenceAction(_prev: ActionState, data: FormData): Pr
     const { db, ent } = await ownEntertainer(str(data, 'entertainerId') || undefined);
     const quote = str(data, 'quote');
     if (!quote) return { error: 'Paste the reference' };
-    repo.addReference(db, ent.id, {
+    await repo.addReference(db, ent.id, {
       quote,
       clientName: str(data, 'clientName'),
       gigDate: isIsoDate(str(data, 'gigDate')) ? str(data, 'gigDate') : null,
@@ -388,7 +390,7 @@ export async function saveRatesAction(_prev: ActionState, data: FormData): Promi
   return guard(async () => {
     const { db, ent } = await ownEntertainer(str(data, 'entertainerId') || undefined);
 
-    repo.upsertRateCard(db, ent.id, {
+    await repo.upsertRateCard(db, ent.id, {
       currency: str(data, 'currency') || 'AED',
       baseHourly: parseMoney(str(data, 'baseHourly')),
       minimumHours: num(data, 'minimumHours') || 1,
@@ -406,7 +408,7 @@ export async function saveRatesAction(_prev: ActionState, data: FormData): Promi
       const weekday = Number(weekdayRaw);
       if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6) continue;
       if (!TIME_BLOCKS.includes(block as TimeBlock)) continue;
-      repo.setRateRule(db, ent.id, {
+      await repo.setRateRule(db, ent.id, {
         weekday: weekday as Weekday,
         timeBlock: block as TimeBlock,
         hourly: parseMoney(String(value)),
@@ -424,7 +426,7 @@ export async function addSpecialDateAction(_prev: ActionState, data: FormData): 
     const { db, ent } = await ownEntertainer(str(data, 'entertainerId') || undefined);
     const date = str(data, 'date');
     if (!isIsoDate(date)) return { error: 'Pick a valid date' };
-    repo.addSpecialDate(db, ent.id, {
+    await repo.addSpecialDate(db, ent.id, {
       date,
       label: str(data, 'label') || 'Special date',
       hourly: parseMoney(str(data, 'hourly')),
@@ -438,7 +440,7 @@ export async function addSpecialDateAction(_prev: ActionState, data: FormData): 
 export async function removeSpecialDateAction(_prev: ActionState, data: FormData): Promise<ActionState> {
   return guard(async () => {
     const { db, ent } = await ownEntertainer(str(data, 'entertainerId') || undefined);
-    repo.removeSpecialDate(db, ent.id, str(data, 'date'));
+    await repo.removeSpecialDate(db, ent.id, str(data, 'date'));
     revalidatePath('/app/rates');
     return { ok: 'Removed' };
   });
@@ -461,7 +463,7 @@ export async function addBlockAction(_prev: ActionState, data: FormData): Promis
       recurUntil: str(data, 'recurUntil') || undefined,
       note: str(data, 'note') || undefined,
     });
-    repo.insertBlock(db, ent.id, block);
+    await repo.insertBlock(db, ent.id, block);
     revalidatePath('/app/calendar');
     revalidatePath(`/entertainers/${ent.slug}`);
     return { ok: 'Dates blocked' };
@@ -472,13 +474,13 @@ export async function removeBlockAction(_prev: ActionState, data: FormData): Pro
   return guard(async () => {
     const { db, ent } = await ownEntertainer(str(data, 'entertainerId') || undefined);
     const blockId = str(data, 'blockId');
-    const block = repo.loadBlocks(db, ent.id).find((b) => b.id === blockId);
+    const block = (await repo.loadBlocks(db, ent.id)).find((b) => b.id === blockId);
     if (!block) return { error: 'No such block' };
     // A booking owns its dates; cancelling the booking is what frees them.
     if (!canRemoveBlock(block)) {
       return { error: 'This date is held by a confirmed booking. Cancel the booking to free it.' };
     }
-    repo.deleteBlock(db, ent.id, blockId);
+    await repo.deleteBlock(db, ent.id, blockId);
     revalidatePath('/app/calendar');
     revalidatePath(`/entertainers/${ent.slug}`);
     return { ok: 'Dates freed' };
@@ -491,7 +493,7 @@ export async function adminProfileAction(_prev: ActionState, data: FormData): Pr
   return guard(async () => {
     await requireRole('admin');
     const db = getDb();
-    moveProfile(db, {
+    await moveProfile(db, {
       entertainerId: str(data, 'entertainerId'),
       to: str(data, 'to') as 'live' | 'draft' | 'suspended',
       role: 'admin',
@@ -507,8 +509,8 @@ export async function adminFlagAction(_prev: ActionState, data: FormData): Promi
     await requireRole('admin');
     const db = getDb();
     const id = str(data, 'entertainerId');
-    if (str(data, 'flag') === 'verified') setVerified(db, id, str(data, 'value') === '1');
-    else setFeatured(db, id, str(data, 'value') === '1');
+    if (str(data, 'flag') === 'verified') await setVerified(db, id, str(data, 'value') === '1');
+    else await setFeatured(db, id, str(data, 'value') === '1');
     revalidatePath('/admin');
     return { ok: 'Updated' };
   });
@@ -519,8 +521,8 @@ export async function adminModerateAction(_prev: ActionState, data: FormData): P
     await requireRole('admin');
     const db = getDb();
     const decision = str(data, 'decision') === 'approve' ? 'approved' : 'rejected';
-    if (str(data, 'target') === 'media') repo.setMediaModeration(db, str(data, 'id'), decision);
-    else repo.setReferenceModeration(db, str(data, 'id'), decision);
+    if (str(data, 'target') === 'media') await repo.setMediaModeration(db, str(data, 'id'), decision);
+    else await repo.setReferenceModeration(db, str(data, 'id'), decision);
     revalidatePath('/admin/moderation');
     return { ok: 'Moderated' };
   });
@@ -529,6 +531,6 @@ export async function adminModerateAction(_prev: ActionState, data: FormData): P
 export async function markNotificationsReadAction(): Promise<void> {
   const user = await currentUser();
   if (!user) return;
-  repo.markNotificationsRead(getDb(), user.id);
+  await repo.markNotificationsRead(getDb(), user.id);
   revalidatePath('/app/notifications');
 }

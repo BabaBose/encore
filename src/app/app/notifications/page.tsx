@@ -19,7 +19,7 @@ export default async function NotificationsPage() {
   const user = await requireUser();
   const { badges } = await pageContext();
   const db = getDb();
-  const notifications = repo.listNotifications(db, user.id);
+  const notifications = await repo.listNotifications(db, user.id);
   const unread = notifications.filter((n) => !n.readAt).length;
 
   return (

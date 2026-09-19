@@ -1,79 +1,232 @@
 /**
- * SQLite connection.
+ * Database access.
  *
- * One file-backed database, opened once per process. SQLite keeps the whole
- * platform runnable with `npm run seed && npm run dev` — no service to stand
- * up — while still being a real relational store with foreign keys enforced.
+ * The app talks to Postgres through one small interface rather than a driver,
+ * so the same repository code runs against Supabase in production and against
+ * an in-process Postgres in the tests. Both are real Postgres — the tests are
+ * not checking a different dialect from the one that ships.
  *
- * ## Running on a serverless host
- *
- * A serverless filesystem is read-only apart from `/tmp`, so the database
- * cannot live beside the code there. In `ephemeral` mode the build's seeded
- * database is copied into `/tmp` on cold start and opened from there.
- *
- * That makes the deployment a working demo, not a production store: `/tmp` is
- * per-instance and is reclaimed when the instance is, so writes are not shared
- * between instances and do not survive. Real durable storage means a hosted
- * database — see README.
+ * Connections are pooled at module scope and sized for serverless: one client
+ * per instance, through Supabase's transaction pooler, which is what keeps a
+ * burst of lambdas from exhausting the database's connection limit.
  */
-import Database from 'better-sqlite3';
-import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 
-export type Db = Database.Database;
+export interface QueryResult<R = Record<string, unknown>> {
+  rows: R[];
+}
 
-const DEFAULT_PATH = join(process.cwd(), 'data', 'booktheact.db');
+/** The whole surface the repositories need from a driver. */
+export interface Sql {
+  query<R = Record<string, unknown>>(text: string, params?: unknown[]): Promise<QueryResult<R>>;
+  /**
+   * Runs a script of several statements, for schema work. Separate from
+   * `query` because a parameterised statement goes over the extended protocol,
+   * which carries exactly one command.
+   */
+  exec(sql: string): Promise<void>;
+  /** Runs `fn` inside a transaction, on a single connection. */
+  transaction<T>(fn: (tx: Sql) => Promise<T>): Promise<T>;
+  close(): Promise<void>;
+}
 
-/** The seeded database the build produces, carried into the bundle. */
-const BUNDLED_SEED = join(process.cwd(), 'data', 'booktheact.db');
+export type Db = Sql;
 
-const EPHEMERAL_PATH = '/tmp/booktheact.db';
+export class MissingDatabaseUrlError extends Error {
+  constructor() {
+    super(
+      'No database configured. Set DATABASE_URL (or POSTGRES_URL) to the Supabase ' +
+        'connection string — the transaction pooler on port 6543 for serverless.',
+    );
+    this.name = 'MissingDatabaseUrlError';
+  }
+}
 
-let instance: Db | null = null;
+export function databaseUrl(): string {
+  const url = process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
+  if (!url) throw new MissingDatabaseUrlError();
+  return url;
+}
 
 /**
- * `ephemeral` is set explicitly, or inferred on Vercel where nothing else can
- * work. Anywhere else the database is an ordinary file that persists.
+ * The connection is held on `globalThis`, not in a module variable.
+ *
+ * A bundler emits this module into more than one route chunk, and a dev server
+ * reloads it; either way a plain module-level singleton becomes several. With
+ * a real Postgres that only wastes pools, but the local file-backed database
+ * ends up with two instances over one directory and they diverge — a session
+ * written by a server action is then invisible to the page that follows it.
  */
-export function isEphemeral(): boolean {
-  if (process.env.BOOKTHEACT_DB_MODE === 'ephemeral') return true;
-  if (process.env.BOOKTHEACT_DB_MODE === 'persistent') return false;
-  return process.env.VERCEL === '1';
+interface DbGlobals {
+  pool?: import('pg').Pool | null;
+  shared?: Sql | null;
+  localBoot?: Promise<Sql> | null;
+}
+const globals = globalThis as typeof globalThis & { __bookTheActDb?: DbGlobals };
+globals.__bookTheActDb ??= {};
+const store = globals.__bookTheActDb;
+
+/** Wraps a `pg` pool in the `Sql` interface. */
+export function createPgSql(connectionString: string = databaseUrl()): Sql {
+  // Imported lazily so the tests, which never touch `pg`, do not load it.
+  const { Pool } = require('pg') as typeof import('pg');
+
+  store.pool ??= new Pool({
+    connectionString,
+    // A serverless instance handles one request at a time, so one connection is
+    // all it can use — and holding more would waste the database's budget.
+    max: Number(process.env.DATABASE_POOL_MAX ?? (process.env.VERCEL ? 1 : 10)),
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 10_000,
+    // Supabase terminates TLS with its own chain; verifying it needs the CA
+    // bundle shipped, which is not worth it for a pooled managed database.
+    ssl: connectionString.includes('localhost') ? undefined : { rejectUnauthorized: false },
+  });
+
+  const wrap = (runner: { query: (text: string, params?: unknown[]) => Promise<{ rows: unknown[] }> }): Sql => ({
+    async query<R>(text: string, params: unknown[] = []) {
+      const result = await runner.query(text, params);
+      return { rows: result.rows as R[] };
+    },
+    async exec(sql: string) {
+      await runner.query(sql);
+    },
+    async transaction<T>(_fn: (tx: Sql) => Promise<T>): Promise<T> {
+      throw new Error('Nested transactions are not supported');
+    },
+    async close() {
+      /* the pool owns the lifetime */
+    },
+  });
+
+  return {
+    async query<R>(text: string, params: unknown[] = []) {
+      const result = await store.pool!.query(text, params as never[]);
+      return { rows: result.rows as R[] };
+    },
+    async exec(sql: string) {
+      // No parameters, so this goes over the simple protocol, which accepts a
+      // script of several statements.
+      await store.pool!.query(sql);
+    },
+    async transaction<T>(fn: (tx: Sql) => Promise<T>): Promise<T> {
+      const client = await store.pool!.connect();
+      try {
+        await client.query('BEGIN');
+        const out = await fn(wrap(client));
+        await client.query('COMMIT');
+        return out;
+      } catch (err) {
+        // A failed transaction must leave nothing behind: a confirmation that
+        // could not block its dates must not have moved the inquiry either.
+        await client.query('ROLLBACK').catch(() => {});
+        throw err;
+      } finally {
+        client.release();
+      }
+    },
+    async close() {
+      await store.pool?.end();
+      store.pool = null;
+      store.shared = null;
+    },
+  };
 }
 
-function resolvePath(explicit?: string): string {
-  if (explicit) return explicit;
-  if (process.env.BOOKTHEACT_DB_PATH) return process.env.BOOKTHEACT_DB_PATH;
-  return isEphemeral() ? EPHEMERAL_PATH : DEFAULT_PATH;
-}
+/**
+ * The shared connection the app uses.
+ *
+ * With no `DATABASE_URL` set outside production it falls back to an
+ * in-process Postgres under `data/`, so `npm run dev` works on a fresh clone
+ * with nothing to install or connect to.
+ *
+ * A production build refuses that fallback unless `BOOKTHEACT_LOCAL_DB=1` asks
+ * for it explicitly — useful for running the real build locally, and never
+ * something a deployment can land in by accident.
+ */
+export function getDb(): Sql {
+  if (store.shared) return store.shared;
 
-export function openDatabase(path?: string): Db {
-  const target = resolvePath(path);
-
-  if (target !== ':memory:') {
-    mkdirSync(dirname(target), { recursive: true });
-    // On a cold start there is nothing in /tmp yet: lay down the build's seeded
-    // copy so the instance comes up with the demo marketplace already in it.
-    if (target === EPHEMERAL_PATH && !existsSync(target) && existsSync(BUNDLED_SEED)) {
-      copyFileSync(BUNDLED_SEED, target);
-    }
+  const hasUrl = !!(process.env.DATABASE_URL ?? process.env.POSTGRES_URL);
+  if (hasUrl) {
+    store.shared = createPgSql();
+    return store.shared;
   }
 
-  const db = new Database(target);
-  // WAL needs to write a sidecar next to the database. That is fine in /tmp and
-  // on a normal disk, but never on the read-only part of a serverless bundle.
-  db.pragma(target === ':memory:' ? 'journal_mode = MEMORY' : 'journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
-  return db;
+  const localAllowed = process.env.NODE_ENV !== 'production' || process.env.BOOKTHEACT_LOCAL_DB === '1';
+  if (!localAllowed) throw new MissingDatabaseUrlError();
+  store.shared = createLocalSql();
+  return store.shared;
+}
+
+/**
+ * A lazily-opened local Postgres. Every call is queued behind the one boot, so
+ * concurrent requests on a cold start do not each try to start their own.
+ */
+function createLocalSql(): Sql {
+  const open = async (): Promise<Sql> => {
+    store.localBoot ??= (async () => {
+      const { createLocalDb } = await import('./pglite');
+      return createLocalDb(join(process.cwd(), 'data', 'pglite'));
+    })();
+    return store.localBoot;
+  };
+
+  return {
+    async query(text, params) {
+      return (await open()).query(text, params);
+    },
+    async exec(sql) {
+      return (await open()).exec(sql);
+    },
+    async transaction(fn) {
+      return (await open()).transaction(fn);
+    },
+    async close() {
+      if (store.localBoot) await (await store.localBoot).close();
+      store.localBoot = null;
+      store.shared = null;
+    },
+  };
+}
+
+/**
+ * Read from the working directory rather than from beside this module: under a
+ * bundler `import.meta.dirname` is not a filesystem path, and the schema is
+ * only ever needed from a checkout — by `npm run db:push`, by the tests, and by
+ * the local fallback database. The deployed app never applies DDL.
+ */
+export function schemaSql(): string {
+  const path = join(process.cwd(), 'src', 'db', 'schema.sql');
+  if (!existsSync(path)) {
+    throw new Error(
+      `Could not find ${path}. The schema is applied from a checkout — run \`npm run db:push\` there, not from a deployment.`,
+    );
+  }
+  return readFileSync(path, 'utf8');
+}
+
+/**
+ * Apply the schema. Idempotent — every statement is `IF NOT EXISTS` — so it is
+ * safe to run against a database that is already up to date.
+ *
+ * This is a deploy-time step (`npm run db:push`), never a request-time one: a
+ * serverless instance has no business issuing DDL on a cold start.
+ */
+export async function migrate(db: Sql): Promise<void> {
+  await db.exec(schemaSql());
+  for (const { table, column, definition } of ADDED_COLUMNS) {
+    await db.query(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS ${column} ${definition}`);
+  }
 }
 
 /**
  * Columns added after a table first shipped.
  *
- * `schema.sql` uses `CREATE TABLE IF NOT EXISTS`, so it builds a new database
- * correctly but never touches an existing one. These run afterwards and are
- * additive and idempotent: each is applied only if the column is genuinely
- * missing, so a database created today skips all of them.
+ * `schema.sql` creates tables only when they do not exist, so it never alters
+ * one that does. These run afterwards, and `IF NOT EXISTS` makes each a no-op
+ * on a database that already has the column.
  */
 const ADDED_COLUMNS: Array<{ table: string; column: string; definition: string }> = [
   {
@@ -82,51 +235,3 @@ const ADDED_COLUMNS: Array<{ table: string; column: string; definition: string }
     definition: "TEXT NOT NULL DEFAULT 'when_largely_free'",
   },
 ];
-
-function columnExists(db: Db, table: string, column: string): boolean {
-  const rows = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
-  return rows.some((r) => r.name === column);
-}
-
-/**
- * `schema.sql` is read relative to this module, not the working directory:
- * a serverless bundle has no `src/` tree, but `next.config.mjs` traces the file
- * in next to the compiled module.
- */
-function readSchema(): string {
-  const candidates = [
-    join(process.cwd(), 'src', 'db', 'schema.sql'),
-    join(import.meta.dirname ?? __dirname, 'schema.sql'),
-  ];
-  for (const candidate of candidates) {
-    if (existsSync(candidate)) return readFileSync(candidate, 'utf8');
-  }
-  throw new Error(`Could not find schema.sql — looked in ${candidates.join(', ')}`);
-}
-
-export function migrate(db: Db): void {
-  db.exec(readSchema());
-
-  for (const { table, column, definition } of ADDED_COLUMNS) {
-    if (columnExists(db, table, column)) continue;
-    // SQLite cannot add a column with a CHECK constraint, so the enum is
-    // enforced by the domain and by schema.sql for freshly created databases.
-    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
-  }
-}
-
-/** The shared connection used by the app. Migrates on first open. */
-export function getDb(): Db {
-  if (!instance) {
-    instance = openDatabase();
-    migrate(instance);
-  }
-  return instance;
-}
-
-/** A fresh in-memory database, for tests. */
-export function createTestDb(): Db {
-  const db = openDatabase(':memory:');
-  migrate(db);
-  return db;
-}

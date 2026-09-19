@@ -17,25 +17,25 @@ export async function pageContext(): Promise<PageContext> {
 
   const db = getDb();
   const badges: Record<string, number> = {};
-  const unread = repo.unreadNotificationCount(db, user.id);
+  const unread = await repo.unreadNotificationCount(db, user.id);
   if (unread) badges['/app/notifications'] = unread;
 
   if (user.role === 'entertainer') {
-    const ent = repo.getEntertainerForUser(db, user.id);
+    const ent = await repo.getEntertainerForUser(db, user.id);
     if (ent) {
-      const open = repo.listInquiriesForEntertainer(db, ent.id).filter((i) => i.status === 'new').length;
+      const open = (await repo.listInquiriesForEntertainer(db, ent.id)).filter((i) => i.status === 'new').length;
       if (open) badges['/app/inquiries'] = open;
     }
   } else if (user.role === 'venue') {
-    const venue = repo.getVenueForUser(db, user.id);
+    const venue = await repo.getVenueForUser(db, user.id);
     if (venue) {
-      const live = repo
-        .listInquiriesForVenue(db, venue.id)
-        .filter((i) => !['completed', 'cancelled', 'declined'].includes(i.status)).length;
+      const live = (await repo.listInquiriesForVenue(db, venue.id)).filter(
+        (i) => !['completed', 'cancelled', 'declined'].includes(i.status),
+      ).length;
       if (live) badges['/app/inquiries'] = live;
     }
   } else if (user.role === 'admin') {
-    const pending = repo.entertainersAwaitingReview(db).length;
+    const pending = (await repo.entertainersAwaitingReview(db)).length;
     if (pending) badges['/admin'] = pending;
   }
 
