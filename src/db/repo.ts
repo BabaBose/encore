@@ -489,6 +489,7 @@ async function hydrate(db: Db, rows: Row[]): Promise<EntertainerDetail[]> {
       reviewNote: (r.review_note as string | null) ?? null,
       isLive: r.status === 'live',
       heroAccent: r.cover_accent as string,
+      photo: (r.profile_photo as string | null) ?? null,
       teamSize: num(r.team_size),
       languages: JSON.parse((r.languages as string) ?? '[]') as string[],
       equipmentProvided: r.equipment_provided as string,

@@ -682,9 +682,71 @@ a:focus-visible {
  * shots drop into the same box: `--art` is set per act from its accent.
  */
 .art {
+  position: relative;
+  overflow: hidden;
   background-image: linear-gradient(150deg, color-mix(in srgb, var(--accent) 24%, transparent), var(--surface-sunken) 62%),
     repeating-linear-gradient(135deg, var(--wash) 0 6px, transparent 6px 15px);
   background-color: var(--surface-sunken);
+}
+
+/* A profile photograph, where there is one. The accent wash stays underneath as
+   the fallback, so an act without a photo still has artwork rather than a hole. */
+.art__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Biased up: faces sit above the middle in nearly every stage shot. */
+  object-position: center 28%;
+  display: block;
+}
+
+/* The photo is absolutely positioned, so anything meant to sit on top of it
+   has to be positioned too — otherwise the image paints over the pills. */
+.art > :not(.art__photo) {
+  position: relative;
+}
+
+/*
+ * A hero is wide and short, and these are card-sized crops: stretched across a
+ * banner one turns to mush and the text ends up sitting on a face. So on a hero
+ * the photograph becomes a panel on the right at close to its natural size,
+ * feathered into the accent wash, with the text keeping the left.
+ */
+.hero:has(> .art__photo) {
+  padding-right: 336px;
+}
+
+.hero > .art__photo {
+  left: auto;
+  width: 300px;
+  object-position: center 22%;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 34%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 34%);
+}
+
+/*
+ * On a phone there is no room for a panel beside the text — it would leave
+ * about 170px to live in — and no bottom gradient rescues a caption sitting on
+ * a lit face. So the photograph becomes a band above the text instead, fading
+ * into the accent wash, and the hero pads itself down to make room.
+ */
+@media (max-width: 760px) {
+  .hero:has(> .art__photo) {
+    padding-right: 26px;
+    padding-top: 196px;
+  }
+
+  .hero > .art__photo {
+    left: 0;
+    bottom: auto;
+    width: 100%;
+    height: 212px;
+    object-position: center 22%;
+    -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+  }
 }
 
 .avatar {

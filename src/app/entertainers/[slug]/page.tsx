@@ -78,7 +78,13 @@ export default async function ProfilePage({
 
         <div className="split">
           <div className="stack" style={{ gap: 28 }}>
-            <Art accent={act.heroAccent} className="hero" style={{ minHeight: 260 }}>
+            <Art
+              accent={act.heroAccent}
+              photo={act.photo}
+              alt={act.stageName}
+              className="hero"
+              style={{ minHeight: 260 }}
+            >
               <div className="row row--tight">
                 {act.featured ? <span className="pill pill--accent">Featured</span> : null}
                 {act.verified ? <span className="pill pill--positive">Verified</span> : null}

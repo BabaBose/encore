@@ -324,6 +324,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                   slug={r.entertainer.slug}
                   name={r.entertainer.stageName}
                   accent={r.entertainer.heroAccent}
+                  photo={r.entertainer.photo}
                   categoryLabel={(r.entertainer as repo.EntertainerDetail).categoryLabel}
                   genreLabels={(r.entertainer as repo.EntertainerDetail).genreLabels}
                   cityName={r.entertainer.homeCity.name}

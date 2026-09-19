@@ -28,6 +28,7 @@ function cardProps(e: EntertainerDetail, opts: { badge?: string | null; longTerm
     slug: e.slug,
     name: e.stageName,
     accent: e.heroAccent,
+    photo: e.photo,
     categoryLabel: e.categoryLabel,
     genreLabels: e.genreLabels,
     cityName: e.homeCity.name,
@@ -82,7 +83,13 @@ export default async function HomePage() {
 
         {hero ? (
           <Link href={`/entertainers/${hero.slug}`} style={{ display: 'block', marginBottom: 34 }}>
-            <Art accent={hero.heroAccent} className="hero" style={{ minHeight: 210 }}>
+            <Art
+              accent={hero.heroAccent}
+              photo={hero.photo}
+              alt={hero.stageName}
+              className="hero"
+              style={{ minHeight: 210 }}
+            >
               <span className="pill pill--accent" style={{ alignSelf: 'flex-start' }}>
                 Featured this week
               </span>

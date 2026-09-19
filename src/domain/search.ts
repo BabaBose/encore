@@ -68,6 +68,8 @@ export interface EntertainerRecord {
   /** Only `live` profiles are discoverable. */
   isLive: boolean;
   heroAccent: string;
+  /** Path to a profile photograph, or null while the act has not added one. */
+  photo: string | null;
   teamSize: number;
 }
 

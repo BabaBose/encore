@@ -182,6 +182,27 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
     [6, 'late_night', Math.round(weekdayEve * 1.19)],
   ];
 
+  /**
+   * Acts with a photograph in `public/acts`, keyed by the slug their name makes.
+   * The rest seed with `profile_photo` null, which is what a real profile looks
+   * like before its owner uploads one — and what the card fallback is for.
+   */
+  const ACT_PHOTOS = new Set([
+    'nadia-rahim',
+    'the-amber-quartet',
+    'kael-voss',
+    'lena-marr',
+    'yusuf-barak',
+    'ines-quist',
+    'dario-sette',
+    'sable',
+    'kestrel-strings',
+  ]);
+  const photoFor = (name: string) => {
+    const slug = slugify(name);
+    return ACT_PHOTOS.has(slug) ? `/acts/${slug}.webp` : null;
+  };
+
   const acts: ActSeed[] = [
     {
       name: 'Nadia Rahim',
@@ -556,15 +577,16 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
     db.query(
       `INSERT INTO entertainers (id, user_id, managed_by_user_id, representation_note, slug, stage_name, real_name,
                                  short_bio, full_bio, category_id, home_city_id, travel_radius_km, country_of_origin,
-                                 team_size, languages, equipment_provided, equipment_required, cover_accent, status,
+                                 team_size, languages, equipment_provided, equipment_required, profile_photo,
+                                 cover_accent, status,
                                  verified, featured, accepts_short_term, accepts_long_term, open_to_relocate,
                                  contract_lengths, residency_inquiry_policy, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
-               $20, $21, $22, $23, $24, $25, $26, $27, $27)`,
+               $20, $21, $22, $23, $24, $25, $26, $27, $28, $28)`,
       [
         v.id, v.userId, v.managedBy, v.repNote, v.slug, v.name, v.realName, v.shortBio, v.fullBio,
         v.categoryId, v.cityId, v.radius, v.origin, v.teamSize, v.languages, v.provides, v.requires,
-        v.accent, v.status, v.verified, v.featured, v.short, v.long, v.relocate, v.lengths,
+        v.photo, v.accent, v.status, v.verified, v.featured, v.short, v.long, v.relocate, v.lengths,
         v.residencyPolicy, v.now,
       ],
     );
@@ -623,6 +645,7 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
       languages: JSON.stringify(act.languages),
       provides: act.provides,
       requires: act.requires,
+      photo: photoFor(act.name),
       accent: act.accent,
       status: act.status ?? 'live',
       verified: !!act.verified,

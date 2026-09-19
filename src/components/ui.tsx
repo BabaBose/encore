@@ -16,17 +16,27 @@ export { accentStyle, resolveAccent };
 
 export function Art({
   accent,
+  photo,
+  alt = '',
   className = '',
   style,
   children,
 }: {
   accent: string;
+  /** A profile photograph. Without one the accent wash below is the artwork. */
+  photo?: string | null;
+  /** Left empty on a card: the act's name is already its link text. */
+  alt?: string;
   className?: string;
   style?: CSSProperties;
   children?: React.ReactNode;
 }) {
   return (
     <div className={`art ${className}`} style={{ ...accentStyle(accent), ...style }}>
+      {photo ? (
+        // eslint-disable-next-line @next/next/no-img-element -- sized by CSS, not by the layout
+        <img className="art__photo" src={photo} alt={alt} loading="lazy" decoding="async" />
+      ) : null}
       {children}
     </div>
   );
@@ -63,6 +73,7 @@ export interface ActCardProps {
   slug: string;
   name: string;
   accent: string;
+  photo?: string | null;
   categoryLabel: string;
   genreLabels: string[];
   cityName: string;
@@ -87,7 +98,7 @@ export function ActCard(props: ActCardProps) {
   const unit = props.priceUnit === 'month' ? '/mo' : '/hr';
   return (
     <Link href={`/entertainers/${props.slug}`} className="act-card" style={accentStyle(props.accent)}>
-      <Art accent={props.accent} className="act-card__art">
+      <Art accent={props.accent} photo={props.photo} className="act-card__art">
         {props.badge ? <span className="pill pill--accent">{props.badge}</span> : <span />}
         {props.verified ? (
           <span className="pill pill--positive" title="Identity verified by Book the Act">

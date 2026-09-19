@@ -42,6 +42,7 @@ function act(overrides: Partial<EntertainerRecord> & { id: string }): Entertaine
     featured: false,
     isLive: true,
     heroAccent: '#ff5fa2',
+    photo: null,
     teamSize: 1,
     ...overrides,
   };

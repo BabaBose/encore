@@ -69,6 +69,7 @@ export default async function ShortlistsPage() {
                             slug={a.slug}
                             name={a.stageName}
                             accent={a.heroAccent}
+                            photo={a.photo}
                             categoryLabel={a.categoryLabel}
                             genreLabels={a.genreLabels}
                             cityName={a.homeCity.name}
