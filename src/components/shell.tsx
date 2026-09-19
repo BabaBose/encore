@@ -58,10 +58,12 @@ export function navFor(user: SessionUser | null): NavItem[] {
     case 'admin':
       return [
         { href: '/admin', label: 'Review queue' },
+        { href: '/admin/listings', label: 'Listings' },
+        { href: '/admin/signups', label: 'Sign-ups' },
+        { href: '/admin/activity', label: 'Activity' },
         { href: '/admin/bookings', label: 'Bookings' },
         { href: '/admin/moderation', label: 'Moderation' },
         { href: '/admin/taxonomy', label: 'Taxonomy' },
-        { href: '/', label: 'Marketplace' },
       ];
   }
 }
@@ -111,10 +113,10 @@ export function Shell({
           <div className="topbar__actions">
             {user ? (
               <>
-                <div className="topbar__who">
+                <Link href="/app/account" className="topbar__who">
                   <div style={{ fontWeight: 600, color: 'var(--ink)' }}>{user.displayName}</div>
                   <div className="eyebrow">{user.role}</div>
-                </div>
+                </Link>
                 <form action="/api/signout" method="post">
                   <button className="btn btn--sm btn--ghost" type="submit">
                     Sign out

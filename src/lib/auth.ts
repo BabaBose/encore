@@ -37,6 +37,12 @@ export async function startSession(userId: string): Promise<void> {
   });
 }
 
+/** The caller's own session token, for keeping it alive across a sign-out-everywhere. */
+export async function currentSessionToken(): Promise<string | null> {
+  const jar = await cookies();
+  return jar.get(SESSION_COOKIE)?.value ?? null;
+}
+
 export async function endSession(): Promise<void> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;

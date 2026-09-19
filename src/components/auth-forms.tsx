@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from 'react';
 import Link from 'next/link';
-import { signInAction, signUpAction, type ActionState } from '@/app/actions';
+import { changePasswordAction, signInAction, signUpAction, type ActionState } from '@/app/actions';
 import type { CityRef } from '@/domain/search';
 
 export function SignInForm() {
@@ -166,6 +166,66 @@ export function SignUpForm({ cities }: { cities: CityRef[] }) {
       <p className="field__hint" style={{ textAlign: 'center' }}>
         Already here? <Link href="/signin" style={{ textDecoration: 'underline' }}>Sign in</Link>
       </p>
+    </form>
+  );
+}
+
+/**
+ * Changing your own password. Lives with the sign-in forms because it is the
+ * same concern, and because it is the one thing every account needs whatever
+ * its role.
+ */
+export function ChangePasswordForm() {
+  const [state, action, pending] = useActionState<ActionState, FormData>(changePasswordAction, {});
+  return (
+    <form action={action} className="stack" style={{ gap: 14, maxWidth: 420 }}>
+      <div className="field">
+        <label className="field__label" htmlFor="currentPassword">
+          Current password
+        </label>
+        <input
+          className="input"
+          id="currentPassword"
+          name="currentPassword"
+          type="password"
+          autoComplete="current-password"
+          required
+        />
+      </div>
+      <div className="field">
+        <label className="field__label" htmlFor="newPassword">
+          New password
+        </label>
+        <input
+          className="input"
+          id="newPassword"
+          name="newPassword"
+          type="password"
+          autoComplete="new-password"
+          minLength={10}
+          required
+        />
+        <div className="field__hint">At least 10 characters. A passphrase beats a short complicated one.</div>
+      </div>
+      <div className="field">
+        <label className="field__label" htmlFor="confirmPassword">
+          New password again
+        </label>
+        <input
+          className="input"
+          id="confirmPassword"
+          name="confirmPassword"
+          type="password"
+          autoComplete="new-password"
+          minLength={10}
+          required
+        />
+      </div>
+      {state.error ? <div className="notice notice--error">{state.error}</div> : null}
+      {state.ok ? <div className="notice notice--ok">{state.ok}</div> : null}
+      <button className="btn btn--primary" type="submit" disabled={pending}>
+        {pending ? 'Changing…' : 'Change password'}
+      </button>
     </form>
   );
 }

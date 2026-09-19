@@ -374,6 +374,9 @@ export async function deleteBookingBlocks(db: Db, inquiryId: string): Promise<vo
 
 export interface EntertainerDetail extends EntertainerRecord {
   userId: string;
+  /** Storage timestamps — the domain does not care, admin oversight does. */
+  createdAt: string;
+  updatedAt: string;
   managedByUserId: string | null;
   representationNote: string | null;
   realName: string | null;
@@ -450,6 +453,8 @@ async function hydrate(db: Db, rows: Row[]): Promise<EntertainerDetail[]> {
     return {
       id,
       userId: r.user_id as string,
+      createdAt: r.created_at as string,
+      updatedAt: r.updated_at as string,
       managedByUserId: (r.managed_by_user_id as string | null) ?? null,
       representationNote: (r.representation_note as string | null) ?? null,
       slug: r.slug as string,
@@ -1336,4 +1341,146 @@ export async function createSubscription(
     'INSERT INTO subscriptions (id, user_id, plan, status, renews_at, created_at) VALUES ($1, $2, $3, $4, $5, $6)',
     [newId('sub'), input.userId, input.plan, input.status, input.renewsAt, nowIso()],
   );
+}
+
+// ---------------------------------------------------------------- oversight --
+
+/**
+ * Every account, newest first, with whatever it signed up as — an act's
+ * category and profile status, or a venue's type. One query rather than one
+ * per user, since admin reads the whole table.
+ */
+export interface SignupRow {
+  userId: string;
+  email: string;
+  role: UserRole;
+  displayName: string;
+  createdAt: string;
+  /** Acts only. */
+  actId: string | null;
+  actSlug: string | null;
+  actStatus: ProfileStatus | null;
+  categorySlug: string | null;
+  categoryLabel: string | null;
+  /** Venues only. */
+  venueType: string | null;
+  cityName: string | null;
+}
+
+export async function listSignups(db: Db): Promise<SignupRow[]> {
+  const { rows } = await db.query<Row>(`
+    SELECT u.id, u.email, u.role, u.display_name, u.created_at,
+           e.id AS act_id, e.slug AS act_slug, e.status AS act_status,
+           c.slug AS category_slug, c.label AS category_label,
+           v.venue_type,
+           city.name AS city_name
+      FROM users u
+      LEFT JOIN entertainers e ON e.user_id = u.id
+      LEFT JOIN categories c ON c.id = e.category_id
+      LEFT JOIN venues v ON v.user_id = u.id
+      LEFT JOIN cities city ON city.id = COALESCE(e.home_city_id, v.city_id)
+     ORDER BY u.created_at DESC, u.email
+  `);
+  return rows.map((r) => ({
+    userId: r.id as string,
+    email: r.email as string,
+    role: r.role as UserRole,
+    displayName: r.display_name as string,
+    createdAt: r.created_at as string,
+    actId: (r.act_id as string | null) ?? null,
+    actSlug: (r.act_slug as string | null) ?? null,
+    actStatus: (r.act_status as ProfileStatus | null) ?? null,
+    categorySlug: (r.category_slug as string | null) ?? null,
+    categoryLabel: (r.category_label as string | null) ?? null,
+    venueType: (r.venue_type as string | null) ?? null,
+    cityName: (r.city_name as string | null) ?? null,
+  }));
+}
+
+/**
+ * One reverse-chronological feed of everything that has happened: sign-ups,
+ * profiles submitted or published, inquiries moving through their states,
+ * messages sent and reviews left.
+ *
+ * A UNION rather than five round trips, and the shape is deliberately flat —
+ * the page renders a line per row and does not need to know which table it
+ * came from beyond `kind`.
+ */
+export type ActivityKind = 'signup' | 'profile' | 'inquiry' | 'message' | 'review';
+
+export interface ActivityRow {
+  kind: ActivityKind;
+  at: string;
+  /** Who did it, where that is known. */
+  actor: string;
+  /** What it happened to. */
+  subject: string;
+  detail: string;
+  /** Set when the row has somewhere to go: an inquiry or a public profile. */
+  href: string | null;
+}
+
+export async function listActivity(db: Db, limit = 120): Promise<ActivityRow[]> {
+  const { rows } = await db.query<Row>(
+    `
+    SELECT * FROM (
+      SELECT 'signup' AS kind, u.created_at AS at, u.display_name AS actor,
+             u.role AS subject, u.email AS detail, NULL AS href
+        FROM users u
+
+      UNION ALL
+      SELECT 'profile', e.updated_at, e.stage_name, e.status,
+             COALESCE(c.label, 'Uncategorised'), '/entertainers/' || e.slug
+        FROM entertainers e
+        LEFT JOIN categories c ON c.id = e.category_id
+
+      UNION ALL
+      SELECT 'inquiry', ev.created_at, ev.actor, ev.to_status,
+             COALESCE(v.name, '') || ' → ' || COALESCE(e.stage_name, ''),
+             '/app/inquiries/' || ev.inquiry_id
+        FROM inquiry_events ev
+        JOIN inquiries i ON i.id = ev.inquiry_id
+        LEFT JOIN venues v ON v.id = i.venue_id
+        LEFT JOIN entertainers e ON e.id = i.entertainer_id
+
+      UNION ALL
+      SELECT 'message', m.created_at, u.display_name, u.role,
+             substr(m.body, 1, 90), '/app/inquiries/' || m.inquiry_id
+        FROM messages m
+        JOIN users u ON u.id = m.sender_id
+
+      UNION ALL
+      SELECT 'review', r.created_at, COALESCE(v.name, 'A venue'), CAST(r.rating AS TEXT),
+             COALESCE(e.stage_name, ''), '/entertainers/' || e.slug
+        FROM reviews r
+        LEFT JOIN venues v ON v.id = r.venue_id
+        LEFT JOIN entertainers e ON e.id = r.entertainer_id
+    ) feed
+    ORDER BY at DESC
+    LIMIT $1
+  `,
+    [limit],
+  );
+  return rows.map((r) => ({
+    kind: r.kind as ActivityKind,
+    at: r.at as string,
+    actor: (r.actor as string | null) ?? '',
+    subject: (r.subject as string | null) ?? '',
+    detail: (r.detail as string | null) ?? '',
+    href: (r.href as string | null) ?? null,
+  }));
+}
+
+/** Changes an account's own password. The caller verifies the old one first. */
+export async function setPassword(db: Db, userId: string, passwordHash: string): Promise<void> {
+  await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, userId]);
+}
+
+/** Signs every other device out — used after a password change. */
+export async function deleteSessionsForUser(db: Db, userId: string, keepToken?: string): Promise<void> {
+  if (keepToken) {
+    await db.query('DELETE FROM sessions WHERE user_id = $1 AND token <> $2', [userId, keepToken]);
+  } else {
+    await db.query('DELETE FROM sessions WHERE user_id = $1', [userId]);
+  }
 }

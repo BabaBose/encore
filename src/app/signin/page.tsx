@@ -21,6 +21,9 @@ export default async function SignInPage() {
           <div className="eyebrow" style={{ marginBottom: 8 }}>
             Demo accounts — password is <code>password</code>
           </div>
+          <p className="field__hint" style={{ marginBottom: 10 }}>
+            These three walk through the marketplace. Staff accounts are not demo accounts and are not listed.
+          </p>
           <dl className="kv">
             <dt>Venue</dt>
             <dd>penthouse@booktheact.test</dd>
@@ -28,8 +31,6 @@ export default async function SignInPage() {
             <dd>nadia@booktheact.test</dd>
             <dt>Agency</dt>
             <dd>northline@booktheact.test</dd>
-            <dt>Admin</dt>
-            <dd>admin@booktheact.test</dd>
           </dl>
         </div>
       </div>

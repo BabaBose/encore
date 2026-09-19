@@ -12,8 +12,9 @@ import { redirect } from 'next/navigation';
 import { getDb } from '@/db/client';
 import * as repo from '@/db/repo';
 import { newId, slugify } from '@/db/ids';
-import { AuthError, currentUser, endSession, hashPassword, requireRole, requireUser, startSession, verifyPassword } from '@/lib/auth';
+import { AuthError, currentSessionToken, currentUser, endSession, hashPassword, requireRole, requireUser, startSession, verifyPassword } from '@/lib/auth';
 import { accessRoleFor, leaveReview, postMessage, sendInquiry, transitionInquiry } from '@/services/booking';
+import { mayEditProfile } from '@/domain/profile';
 import { moveProfile, setFeatured, setVerified } from '@/services/profile';
 import { canRemoveBlock, normaliseManualBlock } from '@/domain/availability';
 import { isIsoDate } from '@/domain/dates';
@@ -273,17 +274,20 @@ export async function leaveReviewAction(_prev: ActionState, data: FormData): Pro
 
 // ------------------------------------------------------------- entertainer --
 
-/** The signed-in act's own profile, or one an agency manages. */
+/**
+ * The signed-in act's own profile, one an agency manages, or — for staff —
+ * any of them. Admin edits go through exactly the same actions as the act's
+ * own, so support can fix a listing without a second, divergent code path
+ * that could write something the act could not have written themselves.
+ */
 async function ownEntertainer(entertainerId?: string) {
-  const user = await requireRole('entertainer', 'agency');
+  const user = await requireRole('entertainer', 'agency', 'admin');
   const db = getDb();
   const ent = entertainerId
     ? await repo.getEntertainerById(db, entertainerId)
     : await repo.getEntertainerForUser(db, user.id);
   if (!ent) throw new AuthError('No entertainer profile on this account');
-  if (ent.userId !== user.id && ent.managedByUserId !== user.id) {
-    throw new AuthError('That profile is not yours to edit');
-  }
+  if (!mayEditProfile(user, ent)) throw new AuthError('That profile is not yours to edit');
   return { db, user, ent };
 }
 
@@ -484,6 +488,47 @@ export async function removeBlockAction(_prev: ActionState, data: FormData): Pro
     revalidatePath('/app/calendar');
     revalidatePath(`/entertainers/${ent.slug}`);
     return { ok: 'Dates freed' };
+  });
+}
+
+// -------------------------------------------------------------- account --
+
+/** Anything shorter is not worth the round trip. */
+const MIN_PASSWORD = 10;
+
+/**
+ * Changes the signed-in account's own password.
+ *
+ * The current password is required even though there is already a session:
+ * without it, anyone who reaches an unlocked machine can lock the real owner
+ * out. Every other session is dropped afterwards, which is the point of
+ * changing a password you think someone else has seen.
+ */
+export async function changePasswordAction(_prev: ActionState, data: FormData): Promise<ActionState> {
+  return guard(async () => {
+    const user = await requireUser();
+    const db = getDb();
+    const current = str(data, 'currentPassword');
+    const next = str(data, 'newPassword');
+
+    if (next.length < MIN_PASSWORD) {
+      return { error: `Use at least ${MIN_PASSWORD} characters` };
+    }
+    if (next !== str(data, 'confirmPassword')) {
+      return { error: 'The two new passwords do not match' };
+    }
+    if (next === current) {
+      return { error: 'That is already your password' };
+    }
+
+    const row = await repo.findUserById(db, user.id);
+    if (!row || !verifyPassword(current, row.passwordHash)) {
+      return { error: 'Your current password is not right' };
+    }
+
+    await repo.setPassword(db, user.id, hashPassword(next));
+    await repo.deleteSessionsForUser(db, user.id, (await currentSessionToken()) ?? undefined);
+    return { ok: 'Password changed. Any other device signed in as you has been signed out.' };
   });
 }
 

@@ -9,6 +9,7 @@
 import { getDb } from '@/db/client';
 import * as repo from '@/db/repo';
 import { requireRole } from '@/lib/auth';
+import { mayEditProfile } from '@/domain/profile';
 import { pageContext } from '@/lib/page-data';
 import { Shell } from '@/components/shell';
 import { Empty, SectionHead, accentStyle } from '@/components/ui';
@@ -23,14 +24,15 @@ export default async function CalendarPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const user = await requireRole('entertainer', 'agency');
+  const user = await requireRole('entertainer', 'agency', 'admin');
   const { badges } = await pageContext();
   const sp = await searchParams;
   const db = getDb();
 
   const actId = typeof sp.act === 'string' ? sp.act : undefined;
   const act = actId ? await repo.getEntertainerById(db, actId) : await repo.getEntertainerForUser(db, user.id);
-  if (!act || (act.userId !== user.id && act.managedByUserId !== user.id)) {
+  // One rule, shared with the actions behind these editors.
+  if (!act || !mayEditProfile(user, act)) {
     return (
       <Shell user={user} current="/app/calendar" badges={badges}>
         <div className="page">

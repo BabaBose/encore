@@ -148,3 +148,22 @@ export const PROFILE_STATUS_LABEL: Record<ProfileStatus, string> = {
   live: 'Live',
   suspended: 'Suspended',
 };
+
+/**
+ * Who may author a listing.
+ *
+ * The act itself, an agency or manager it has named, and Book the Act staff —
+ * who need it for support, and who go through the same writes as the act
+ * rather than a second, more permissive path. Every other signed-in user is
+ * refused, including another act.
+ *
+ * One rule in one place: the editor pages and the server actions both ask it,
+ * so a page that shows an editor can never disagree with the action behind it.
+ */
+export function mayEditProfile(
+  viewer: { id: string; role: UserRole },
+  act: { userId: string; managedByUserId: string | null },
+): boolean {
+  if (viewer.role === 'admin') return true;
+  return act.userId === viewer.id || act.managedByUserId === viewer.id;
+}

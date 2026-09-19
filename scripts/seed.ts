@@ -762,11 +762,21 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
 
   // ------------------------------------------------------------------- admin --
 
+  /*
+   * The staff account. The three demo accounts above are advertised on the
+   * sign-in page with a known password because they are there to walk through
+   * the marketplace; an admin account with a known password is a way in to
+   * everybody's data, so this one takes its credentials from the environment
+   * whenever they are set and only falls back to the demo pair when they are
+   * not — which is local development and the test suite.
+   */
+  const adminEmail = (process.env.BOOKTHEACT_ADMIN_EMAIL ?? 'admin@booktheact.test').toLowerCase();
+  const adminPassword = process.env.BOOKTHEACT_ADMIN_PASSWORD ?? 'password';
   await repo.createUser(db, {
-    email: 'admin@booktheact.test',
-    passwordHash: hashPassword('password'),
+    email: adminEmail,
+    passwordHash: hashPassword(adminPassword),
     role: 'admin',
-    displayName: 'Book the Act Admin',
+    displayName: process.env.BOOKTHEACT_ADMIN_NAME ?? 'Book the Act Admin',
   });
 
   // -------------------------------------------------------------- shortlists --
@@ -935,7 +945,7 @@ async function main(): Promise<void> {
   console.log('  venue        penthouse@booktheact.test');
   console.log('  entertainer  nadia@booktheact.test');
   console.log('  agency       northline@booktheact.test');
-  console.log('  admin        admin@booktheact.test');
+  console.log(`  admin        ${(process.env.BOOKTHEACT_ADMIN_EMAIL ?? 'admin@booktheact.test').toLowerCase()}`);
 }
 
 if (process.argv[1]?.includes('seed')) {
