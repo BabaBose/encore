@@ -64,7 +64,7 @@ export default async function AdminActivityPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const user = await requireRole('admin');
-  const { badges } = await pageContext();
+  const { badges, money } = await pageContext();
   const sp = await searchParams;
   const kind = typeof sp.kind === 'string' ? sp.kind : 'all';
 
@@ -72,7 +72,7 @@ export default async function AdminActivityPage({
   const rows = kind === 'all' ? all : all.filter((r) => r.kind === kind);
 
   return (
-    <Shell user={user} current="/admin/activity" badges={badges}>
+    <Shell user={user} current="/admin/activity" badges={badges} money={money}>
       <div className="page">
         <h1 className="display" style={{ marginBottom: 6 }}>
           Activity

@@ -20,7 +20,7 @@ export default async function RatesPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const user = await requireRole('entertainer', 'agency', 'admin');
-  const { badges } = await pageContext();
+  const { badges, money } = await pageContext();
   const sp = await searchParams;
   const db = getDb();
 
@@ -29,7 +29,7 @@ export default async function RatesPage({
   // One rule, shared with the actions behind these editors.
   if (!act || !mayEditProfile(user, act)) {
     return (
-      <Shell user={user} current="/app/rates" badges={badges}>
+      <Shell user={user} current="/app/rates" badges={badges} money={money}>
         <div className="page">
           <Empty>No profile on this account.</Empty>
         </div>
@@ -38,7 +38,7 @@ export default async function RatesPage({
   }
 
   return (
-    <Shell user={user} current="/app/rates" badges={badges}>
+    <Shell user={user} current="/app/rates" badges={badges} money={money}>
       <div className="page" style={accentStyle(act.heroAccent)}>
         <h1 className="display" style={{ marginBottom: 6 }}>
           Rates

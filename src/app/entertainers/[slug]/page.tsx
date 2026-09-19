@@ -19,7 +19,8 @@ import { AvailabilityGrid, CalendarLegend } from '@/components/calendar';
 import { RateGrid, RateSummary } from '@/components/rate-table';
 import { InquiryPanel } from '@/components/inquiry-panel';
 import { ShortlistButton } from '@/components/shortlist-button';
-import { formatDate, formatMoney, formatMoneyShort } from '@/lib/format';
+import { formatDate } from '@/lib/format';
+import { CurrencyNote, Price } from '@/components/money';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +33,7 @@ export default async function ProfilePage({
 }) {
   const { slug } = await params;
   const sp = await searchParams;
-  const { user, badges } = await pageContext();
+  const { user, badges, money } = await pageContext();
 
   const db = getDb();
   const act = await repo.getEntertainerBySlug(db, slug);
@@ -67,7 +68,7 @@ export default async function ProfilePage({
   const shortlists = viewerVenue ? await repo.listShortlists(db, viewerVenue.id) : [];
 
   return (
-    <Shell user={user} current="/search" badges={badges}>
+    <Shell user={user} current="/search" badges={badges} money={money}>
       <div className="page" style={accentStyle(act.heroAccent)}>
         {!isDiscoverable(act.status) ? (
           <div className="notice" style={{ marginBottom: 18 }}>
@@ -255,7 +256,7 @@ export default async function ProfilePage({
                             </div>
                           </div>
                           <span className="mono" style={{ color: 'var(--amber)' }}>
-                            {formatMoney(s.hourly, act.rateCard.currency)}/hr
+                            <Price minor={s.hourly} currency={act.rateCard.currency} suffix="/hr" />
                           </span>
                         </div>
                       ))}
@@ -336,7 +337,7 @@ export default async function ProfilePage({
                 <div>
                   <div className="eyebrow">From</div>
                   <div className="title" style={{ fontSize: 20 }}>
-                    {formatMoneyShort(startingFromHourly(act.rateCard), act.rateCard.currency)}
+                    <Price minor={startingFromHourly(act.rateCard)} currency={act.rateCard.currency} short />
                     <span className="dim" style={{ fontSize: 13, fontWeight: 500 }}>
                       {' '}
                       / hour
@@ -344,9 +345,17 @@ export default async function ProfilePage({
                   </div>
                   {startingFromMonthly(act.rateCard) != null ? (
                     <div className="dim mono" style={{ fontSize: 11.5 }}>
-                      residency from {formatMoneyShort(startingFromMonthly(act.rateCard)!, act.rateCard.currency)}/mo
+                      residency from{' '}
+                      <Price
+                        minor={startingFromMonthly(act.rateCard)!}
+                        currency={act.rateCard.currency}
+                        suffix="/mo"
+                        short
+                      />
                     </div>
                   ) : null}
+                  {/* Says where the ≈ figures come from and that they are not the deal. */}
+                  <CurrencyNote />
                 </div>
                 {user?.role === 'venue' ? (
                   <ShortlistButton entertainerId={act.id} shortlists={shortlists} />

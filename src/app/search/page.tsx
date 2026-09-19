@@ -61,7 +61,7 @@ function readQuery(p: Params): SearchQuery {
 export default async function SearchPage({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams;
   const query = readQuery(params);
-  const { user, badges } = await pageContext();
+  const { user, badges, money } = await pageContext();
 
   const db = getDb();
   const cities = await repo.listCities(db);
@@ -94,7 +94,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   };
 
   return (
-    <Shell user={user} current="/search" badges={badges}>
+    <Shell user={user} current="/search" badges={badges} money={money}>
       <div className="page page--wide" style={{ display: 'grid', gridTemplateColumns: '286px minmax(0, 1fr)', gap: 28, alignItems: 'start' }}>
         <form className="panel sticky" method="get" action="/search">
           <div className="panel__head">

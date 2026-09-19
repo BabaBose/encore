@@ -1270,3 +1270,47 @@ a:focus-visible {
     aspect-ratio: 4 / 5;
   }
 }
+
+/* ---------------------------------------------------------------- money --
+ * A converted price is a courtesy, so it is styled as one: lighter, smaller
+ * and behind the figure that will actually be paid. It never competes with it.
+ */
+.price__exact {
+  white-space: nowrap;
+}
+
+.price__approx {
+  color: var(--ink-dim);
+  font-weight: 500;
+  font-size: 0.86em;
+  white-space: nowrap;
+}
+
+.currency-picker__select {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--wash);
+  color: var(--ink-dim);
+  border-radius: var(--radius-pill);
+  padding: 6px 10px;
+  font: 600 11.5px var(--font-mono);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.currency-picker__select:hover {
+  background: var(--wash-strong);
+  color: var(--ink);
+}
+
+.currency-picker__select:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* The native menu is drawn by the OS, so its options need explicit colours. */
+.currency-picker__select option {
+  background: var(--surface-raised);
+  color: var(--ink);
+}

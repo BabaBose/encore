@@ -14,7 +14,8 @@ import { today } from '@/domain/dates';
 import { pageContext } from '@/lib/page-data';
 import { Shell } from '@/components/shell';
 import { ActCard, Art, Chip, SectionHead, Stars, accentStyle } from '@/components/ui';
-import { formatMoneyShort, formatDate } from '@/lib/format';
+import { formatDate } from '@/lib/format';
+import { Price } from '@/components/money';
 import { HeroImage } from '@/components/hero-image';
 import { HowItWorks } from '@/components/how-it-works';
 import type { EntertainerDetail } from '@/db/repo';
@@ -50,7 +51,7 @@ function nextNye(from: string): string {
 }
 
 export default async function HomePage() {
-  const { user, badges } = await pageContext();
+  const { user, badges, money } = await pageContext();
   const db = getDb();
   const acts = await repo.liveEntertainers(db);
   const now = today();
@@ -66,7 +67,7 @@ export default async function HomePage() {
   const pianists = acts.filter((a) => a.genres.includes('piano') || a.category === 'instrumentalist').slice(0, 8);
 
   return (
-    <Shell user={user} current="/" badges={badges}>
+    <Shell user={user} current="/" badges={badges} money={money}>
       <div className="page">
         <div style={{ marginBottom: 36 }}>
           <HeroImage>
@@ -103,7 +104,7 @@ export default async function HomePage() {
                 <Chip mono>{hero.categoryLabel}</Chip>
                 <Chip>{hero.homeCity.name}</Chip>
                 <Chip accent>
-                  from {formatMoneyShort(startingFromHourly(hero.rateCard), hero.rateCard.currency)}/hr
+                  from <Price minor={startingFromHourly(hero.rateCard)} currency={hero.rateCard.currency} suffix="/hr" short />
                 </Chip>
                 <Stars rating={hero.rating} count={hero.reviewCount} />
               </div>

@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function TaxonomyPage() {
   const user = await requireRole('admin');
-  const { badges } = await pageContext();
+  const { badges, money } = await pageContext();
   const db = getDb();
   const categories = await repo.topCategories(db);
   const genresPerCategory = await Promise.all(categories.map((c) => repo.genresFor(db, c.id)));
@@ -21,7 +21,7 @@ export default async function TaxonomyPage() {
   const acts = await repo.allEntertainers(db);
 
   return (
-    <Shell user={user} current="/admin/taxonomy" badges={badges}>
+    <Shell user={user} current="/admin/taxonomy" badges={badges} money={money}>
       <div className="page" style={{ maxWidth: 900 }}>
         <h1 className="display" style={{ marginBottom: 6 }}>
           Taxonomy

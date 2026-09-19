@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
+import { moneyContext } from '@/lib/visitor';
 import { getDb } from '@/db/client';
 import * as repo from '@/db/repo';
 import { Shell } from '@/components/shell';
@@ -9,9 +10,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function SignUpPage() {
   if (await currentUser()) redirect('/app');
+  const money = await moneyContext();
   const cities = await repo.listCities(getDb());
   return (
-    <Shell user={null} current="/signup">
+    <Shell user={null} current="/signup" money={money}>
       <div className="page" style={{ maxWidth: 480 }}>
         <h1 className="display" style={{ marginBottom: 6 }}>
           Join Book the Act

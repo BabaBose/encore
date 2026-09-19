@@ -20,6 +20,7 @@ import {
   type ResidencyInquiryPolicy,
   type TimeBlock,
 } from '@/domain/types';
+import { Price } from '@/components/money';
 import { formatMoney, formatDate } from '@/lib/format';
 import type { CityRef } from '@/domain/search';
 
@@ -61,11 +62,13 @@ export function InquiryPanel(props: InquiryPanelProps) {
         return {
           amount: q.monthlyTotal,
           currency: q.currency,
-          headline: `${formatMoney(q.monthlyTotal, q.currency)} / month`,
+          headlineMinor: q.monthlyTotal,
+          headlineSuffix: ' / month',
           detail: `${months} months · ${daysPerWeek} nights a week${
             q.extraDaysPerWeek ? ` · ${q.extraDaysPerWeek} beyond the package` : ''
           }`,
-          total: `${formatMoney(q.contractTotal, q.currency)} over the contract`,
+          totalMinor: q.contractTotal,
+          totalNote: 'over the contract',
           error: null as string | null,
         };
       }
@@ -74,20 +77,24 @@ export function InquiryPanel(props: InquiryPanelProps) {
       return {
         amount: q.total,
         currency: q.currency,
-        headline: `${formatMoney(q.total, q.currency)}`,
+        headlineMinor: q.total,
+        headlineSuffix: '',
         detail: `${q.label} · ${q.billableHours} hr × ${formatMoney(q.hourly, q.currency)}${
           q.minimumApplied ? ` (${q.minimumHours} hr minimum)` : ''
         }`,
-        total: q.source === 'special_date' ? 'Special-date rate — overrides the weekly grid' : null,
+        totalMinor: null as number | null,
+        totalNote: q.source === 'special_date' ? 'Special-date rate — overrides the weekly grid' : null,
         error: null as string | null,
       };
     } catch (err) {
       return {
         amount: 0,
         currency: props.rateCard.currency,
-        headline: '—',
+        headlineMinor: null as number | null,
+        headlineSuffix: '',
         detail: '',
-        total: null,
+        totalMinor: null as number | null,
+        totalNote: null as string | null,
         error: err instanceof Error ? err.message : 'Cannot quote this yet',
       };
     }
@@ -258,14 +265,24 @@ export function InquiryPanel(props: InquiryPanelProps) {
       <div className="card" style={{ background: 'var(--surface-sunken)' }}>
         <div className="eyebrow">Their published rate</div>
         <div className="title" style={{ fontSize: 19, margin: '4px 0 6px' }}>
-          {quote.headline}
+          {quote.headlineMinor == null ? (
+            '—'
+          ) : (
+            <Price minor={quote.headlineMinor} currency={quote.currency} suffix={quote.headlineSuffix} />
+          )}
         </div>
         <div className="dim" style={{ fontSize: 12 }}>
           {quote.error ?? quote.detail}
         </div>
-        {quote.total ? (
+        {quote.totalMinor != null || quote.totalNote ? (
           <div className="mono" style={{ fontSize: 11.5, marginTop: 6, color: 'var(--amber)' }}>
-            {quote.total}
+            {quote.totalMinor != null ? (
+              <>
+                <Price minor={quote.totalMinor} currency={quote.currency} /> {quote.totalNote}
+              </>
+            ) : (
+              quote.totalNote
+            )}
           </div>
         ) : null}
         {availability ? (

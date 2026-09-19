@@ -8,6 +8,7 @@
  * "that date is already committed" is information the venue needs, not a crash.
  */
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getDb } from '@/db/client';
 import * as repo from '@/db/repo';
@@ -15,6 +16,8 @@ import { newId, slugify } from '@/db/ids';
 import { AuthError, currentSessionToken, currentUser, endSession, hashPassword, requireRole, requireUser, startSession, verifyPassword } from '@/lib/auth';
 import { accessRoleFor, leaveReview, postMessage, sendInquiry, transitionInquiry } from '@/services/booking';
 import { mayEditProfile } from '@/domain/profile';
+import { knownCurrency } from '@/domain/currency';
+import { CURRENCY_COOKIE, CURRENCY_COOKIE_MAX_AGE } from '@/lib/visitor';
 import { moveProfile, setFeatured, setVerified } from '@/services/profile';
 import { canRemoveBlock, normaliseManualBlock } from '@/domain/availability';
 import { isIsoDate } from '@/domain/dates';
@@ -489,6 +492,30 @@ export async function removeBlockAction(_prev: ActionState, data: FormData): Pro
     revalidatePath(`/entertainers/${ent.slug}`);
     return { ok: 'Dates freed' };
   });
+}
+
+// --------------------------------------------------------------- display --
+
+/**
+ * Remembers which currency this visitor wants prices shown in.
+ *
+ * A display preference and nothing more — it never changes what a booking is
+ * agreed in, so it lives in its own cookie rather than on the account, and it
+ * works for a visitor who has not signed up.
+ */
+export async function setCurrencyAction(code: string): Promise<void> {
+  const currency = knownCurrency(code);
+  if (!currency) return;
+  const jar = await cookies();
+  jar.set(CURRENCY_COOKIE, currency, {
+    httpOnly: false,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: CURRENCY_COOKIE_MAX_AGE,
+  });
+  // Prices are rendered on the server, so the whole tree has to come back.
+  revalidatePath('/', 'layout');
 }
 
 // -------------------------------------------------------------- account --

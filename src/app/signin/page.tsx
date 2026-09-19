@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
+import { moneyContext } from '@/lib/visitor';
 import { Shell } from '@/components/shell';
 import { SignInForm } from '@/components/auth-forms';
 
@@ -7,8 +8,9 @@ export const dynamic = 'force-dynamic';
 
 export default async function SignInPage() {
   if (await currentUser()) redirect('/app');
+  const money = await moneyContext();
   return (
-    <Shell user={null} current="/signin">
+    <Shell user={null} current="/signin" money={money}>
       <div className="page" style={{ maxWidth: 460 }}>
         <h1 className="display" style={{ marginBottom: 6 }}>
           Sign in

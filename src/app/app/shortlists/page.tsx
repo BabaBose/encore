@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function ShortlistsPage() {
   const user = await requireRole('venue');
-  const { badges } = await pageContext();
+  const { badges, money } = await pageContext();
   const db = getDb();
   const venue = await repo.getVenueForUser(db, user.id);
   const lists = venue ? await repo.listShortlists(db, venue.id) : [];
@@ -31,7 +31,7 @@ export default async function ShortlistsPage() {
   );
 
   return (
-    <Shell user={user} current="/app/shortlists" badges={badges}>
+    <Shell user={user} current="/app/shortlists" badges={badges} money={money}>
       <div className="page">
         <div className="spread" style={{ marginBottom: 6 }}>
           <h1 className="display">Shortlists</h1>

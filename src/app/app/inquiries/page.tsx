@@ -34,7 +34,7 @@ function when(i: InquiryRow): string {
 
 export default async function InquiriesPage() {
   const user = await requireUser();
-  const { badges } = await pageContext();
+  const { badges, money } = await pageContext();
   const db = getDb();
 
   let inquiries: InquiryRow[] = [];
@@ -62,7 +62,7 @@ export default async function InquiriesPage() {
   );
 
   return (
-    <Shell user={user} current="/app/inquiries" badges={badges}>
+    <Shell user={user} current="/app/inquiries" badges={badges} money={money}>
       <div className="page">
         <h1 className="display" style={{ marginBottom: 6 }}>
           Inquiries

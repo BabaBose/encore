@@ -17,13 +17,13 @@ export const dynamic = 'force-dynamic';
 
 export default async function NotificationsPage() {
   const user = await requireUser();
-  const { badges } = await pageContext();
+  const { badges, money } = await pageContext();
   const db = getDb();
   const notifications = await repo.listNotifications(db, user.id);
   const unread = notifications.filter((n) => !n.readAt).length;
 
   return (
-    <Shell user={user} current="/app/notifications" badges={badges}>
+    <Shell user={user} current="/app/notifications" badges={badges} money={money}>
       <div className="page" style={{ maxWidth: 720 }}>
         <div className="spread" style={{ marginBottom: 6 }}>
           <h1 className="display">Activity</h1>

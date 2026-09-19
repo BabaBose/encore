@@ -5,15 +5,23 @@
 import { getDb } from '@/db/client';
 import * as repo from '@/db/repo';
 import { currentUser, type SessionUser } from '@/lib/auth';
+import { moneyContext } from '@/lib/visitor';
+import type { MoneyView } from '@/components/money';
 
 export interface PageContext {
   user: SessionUser | null;
   badges: Record<string, number>;
+  /**
+   * Which currency to show this visitor, and the rates to get there. Resolved
+   * here so every page gets it the same way and a price anywhere in the tree
+   * can read it without being handed it.
+   */
+  money: MoneyView;
 }
 
 export async function pageContext(): Promise<PageContext> {
-  const user = await currentUser();
-  if (!user) return { user: null, badges: {} };
+  const [user, money] = await Promise.all([currentUser(), moneyContext()]);
+  if (!user) return { user: null, badges: {}, money };
 
   const db = getDb();
   const badges: Record<string, number> = {};
@@ -39,5 +47,5 @@ export async function pageContext(): Promise<PageContext> {
     if (pending) badges['/admin'] = pending;
   }
 
-  return { user, badges };
+  return { user, badges, money };
 }

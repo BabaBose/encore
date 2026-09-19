@@ -29,7 +29,7 @@ const NEW_DAYS = 30;
 
 export default async function AdminSignupsPage() {
   const user = await requireRole('admin');
-  const { badges } = await pageContext();
+  const { badges, money } = await pageContext();
   const signups = await repo.listSignups(getDb());
 
   const cutoff = new Date(Date.now() - NEW_DAYS * 86_400_000).toISOString();
@@ -58,7 +58,7 @@ export default async function AdminSignupsPage() {
   const uncategorised = acts.filter((a) => !a.categorySlug).length;
 
   return (
-    <Shell user={user} current="/admin/signups" badges={badges}>
+    <Shell user={user} current="/admin/signups" badges={badges} money={money}>
       <div className="page">
         <h1 className="display" style={{ marginBottom: 6 }}>
           Sign-ups

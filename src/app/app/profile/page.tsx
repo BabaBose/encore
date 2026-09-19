@@ -20,7 +20,7 @@ export default async function ProfileEditorPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const user = await requireRole('entertainer', 'agency', 'admin');
-  const { badges } = await pageContext();
+  const { badges, money } = await pageContext();
   const sp = await searchParams;
   const db = getDb();
 
@@ -29,7 +29,7 @@ export default async function ProfileEditorPage({
   // One rule, shared with the actions behind these editors.
   if (!act || !mayEditProfile(user, act)) {
     return (
-      <Shell user={user} current="/app/profile" badges={badges}>
+      <Shell user={user} current="/app/profile" badges={badges} money={money}>
         <div className="page">
           <Empty>No profile on this account.</Empty>
         </div>
@@ -46,7 +46,7 @@ export default async function ProfileEditorPage({
   const awards = await repo.listAwards(db, act.id);
 
   return (
-    <Shell user={user} current="/app/profile" badges={badges}>
+    <Shell user={user} current="/app/profile" badges={badges} money={money}>
       <div className="page" style={accentStyle(act.heroAccent)}>
         <div className="spread" style={{ marginBottom: 6 }}>
           <h1 className="display">Profile</h1>

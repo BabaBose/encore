@@ -12,6 +12,7 @@ import { goLiveRequirements } from '@/domain/profile';
 import { draftFor } from '@/services/profile';
 import { today } from '@/domain/dates';
 import { pageContext } from '@/lib/page-data';
+import type { MoneyView } from '@/components/money';
 import { requireUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import { Empty, SectionHead, StatusPill, Stars, accentStyle } from '@/components/ui';
@@ -27,15 +28,15 @@ export default async function AppHome() {
   if (user.role === 'venue') redirect('/app/shortlists');
   if (user.role === 'admin') redirect('/admin');
 
-  const { badges } = await pageContext();
+  const { badges, money } = await pageContext();
   const db = getDb();
 
-  if (user.role === 'agency') return <AgencyRoster userId={user.id} badges={badges} user={user} />;
+  if (user.role === 'agency') return <AgencyRoster userId={user.id} badges={badges} money={money} user={user} />;
 
   const act = await repo.getEntertainerForUser(db, user.id);
   if (!act) {
     return (
-      <Shell user={user} current="/app" badges={badges}>
+      <Shell user={user} current="/app" badges={badges} money={money}>
         <div className="page">
           <Empty>No entertainer profile on this account yet.</Empty>
         </div>
@@ -56,7 +57,7 @@ export default async function AppHome() {
   const subscription = await repo.getSubscription(db, user.id);
 
   return (
-    <Shell user={user} current="/app" badges={badges}>
+    <Shell user={user} current="/app" badges={badges} money={money}>
       <div className="page" style={accentStyle(act.heroAccent)}>
         <div className="spread" style={{ marginBottom: 24 }}>
           <div>
@@ -244,10 +245,12 @@ export default async function AppHome() {
 async function AgencyRoster({
   userId,
   badges,
+  money,
   user,
 }: {
   userId: string;
   badges: Record<string, number>;
+  money: MoneyView;
   user: Awaited<ReturnType<typeof requireUser>>;
 }) {
   const db = getDb();
@@ -264,7 +267,7 @@ async function AgencyRoster({
   );
 
   return (
-    <Shell user={user} current="/app" badges={badges}>
+    <Shell user={user} current="/app" badges={badges} money={money}>
       <div className="page">
         <div className="eyebrow">Agency workspace</div>
         <h1 className="display" style={{ margin: '4px 0 6px' }}>

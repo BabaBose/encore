@@ -6,7 +6,7 @@ import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import { STATUS_LABEL, STATUS_TONE } from '@/domain/inquiry';
 import type { InquiryStatus } from '@/domain/types';
-import { formatMoneyShort } from '@/lib/format';
+import { Price } from '@/components/money';
 import { MATCH_REASON_LABEL, type MatchReason } from '@/domain/search';
 import { accentStyle, resolveAccent } from '@/lib/accents';
 
@@ -114,8 +114,7 @@ export function ActCard(props: ActCardProps) {
         <div className="spread">
           <span className="act-card__rate">
             {props.priceNote ? '' : 'from '}
-            {formatMoneyShort(props.priceFrom, props.currency)}
-            {unit}
+            <Price minor={props.priceFrom} currency={props.currency} suffix={unit} short />
             {props.priceNote ? <span className="dim"> {props.priceNote}</span> : null}
           </span>
           <Stars rating={props.rating} count={props.reviewCount} />

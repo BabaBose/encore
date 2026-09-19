@@ -24,11 +24,11 @@ const ROLE_LABEL: Record<string, string> = {
 
 export default async function AccountPage() {
   const user = await requireUser();
-  const { badges } = await pageContext();
+  const { badges, money } = await pageContext();
   const row = await repo.findUserById(getDb(), user.id);
 
   return (
-    <Shell user={user} current="/app/account" badges={badges}>
+    <Shell user={user} current="/app/account" badges={badges} money={money}>
       <div className="page" style={{ maxWidth: 720 }}>
         <h1 className="display" style={{ marginBottom: 6 }}>
           Account

@@ -5,7 +5,7 @@
  */
 import { TIME_BLOCKS, TIME_BLOCK_LABELS, WEEKDAY_LABELS, type Weekday } from '@/domain/types';
 import type { RateCard } from '@/domain/rates';
-import { formatMoney } from '@/lib/format';
+import { Price } from '@/components/money';
 
 export function RateGrid({ card }: { card: RateCard }) {
   const cell = (weekday: Weekday, block: (typeof TIME_BLOCKS)[number]) =>
@@ -39,7 +39,7 @@ export function RateGrid({ card }: { card: RateCard }) {
               }
               return (
                 <td key={b} className={rule.hourly === peak ? 'is-peak' : undefined}>
-                  {formatMoney(rule.hourly, card.currency)}
+                  <Price minor={rule.hourly} currency={card.currency} />
                 </td>
               );
             })}
@@ -54,7 +54,9 @@ export function RateSummary({ card }: { card: RateCard }) {
   return (
     <dl className="kv">
       <dt>Base</dt>
-      <dd>{formatMoney(card.baseHourly, card.currency)} / hour</dd>
+      <dd>
+        <Price minor={card.baseHourly} currency={card.currency} /> / hour
+      </dd>
       <dt>Minimum</dt>
       <dd>
         {card.minimumHours} hour{card.minimumHours === 1 ? '' : 's'} per booking
@@ -64,14 +66,16 @@ export function RateSummary({ card }: { card: RateCard }) {
           <dt>Residency</dt>
           <dd>
             {card.residency.monthly != null
-              ? `${formatMoney(card.residency.monthly, card.currency)} / month`
-              : `${formatMoney(card.residency.weekly ?? 0, card.currency)} / week`}{' '}
+              ? <><Price minor={card.residency.monthly} currency={card.currency} /> / month</>
+              : <><Price minor={card.residency.weekly ?? 0} currency={card.currency} /> / week</>}{' '}
             · {card.residency.daysPerWeekIncluded} nights a week included
           </dd>
           {card.residency.extraDayRate != null ? (
             <>
               <dt>Extra night</dt>
-              <dd>{formatMoney(card.residency.extraDayRate, card.currency)}</dd>
+              <dd>
+                <Price minor={card.residency.extraDayRate} currency={card.currency} />
+              </dd>
             </>
           ) : null}
         </>

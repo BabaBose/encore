@@ -172,6 +172,34 @@ with anything beyond N at the extra-night rate — never as hours × rate.
 The "from" price on a search card deliberately excludes special dates, so a NYE
 rate never masquerades as an act's starting price.
 
+### A listing is priced in one currency; conversion is a courtesy
+
+An act lists in the currency they are paid in, and that figure is what every
+surface shows first. A visitor from elsewhere gets an approximation beside it —
+`AED 350 ≈ £75` — never instead of it, always rounded, always marked with `≈`.
+Nothing in the booking flow is ever agreed in the converted figure.
+
+The visitor's currency is resolved in this order, and the first answer wins:
+
+1. a choice they made, kept in the `booktheact_currency` cookie for a year;
+2. the country the request came from (`x-vercel-ip-country`, or `cf-ipcountry`);
+3. the marketplace default, AED.
+
+IP geolocation is wrong often enough — a VPN, a roaming phone, a corporate
+egress in another country — that it can only ever be a starting point, which is
+why the picker in the header exists and why a choice outranks it.
+
+Rates ship in a built-in table in `src/lib/fx.ts` with an `asOf` date that is
+shown to the visitor, so an approximation can be judged rather than trusted.
+Set `BOOKTHEACT_FX_URL` to a feed quoting rates against AED (open.er-api.com
+and exchangerate.host both work) to refresh them; the response is cached for six
+hours and any failure — a bad status, the wrong base currency, too few
+currencies — falls back to the built-in table rather than showing nothing.
+
+`src/domain/currency.ts` holds the whole thing and touches neither the network
+nor the request, which is why it can be tested. A missing rate yields no
+conversion at all, never a wrong number.
+
 ### No date is ever double-committed
 
 Every date starts available. An entertainer blocks dates by hand — a single day,

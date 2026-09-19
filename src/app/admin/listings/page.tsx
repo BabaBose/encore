@@ -28,7 +28,7 @@ export default async function AdminListingsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const user = await requireRole('admin');
-  const { badges } = await pageContext();
+  const { badges, money } = await pageContext();
   const sp = await searchParams;
   const filter = typeof sp.status === 'string' ? sp.status : 'all';
 
@@ -36,7 +36,7 @@ export default async function AdminListingsPage({
   const shown = filter === 'all' ? all : all.filter((a) => a.status === filter);
 
   return (
-    <Shell user={user} current="/admin/listings" badges={badges}>
+    <Shell user={user} current="/admin/listings" badges={badges} money={money}>
       <div className="page">
         <h1 className="display" style={{ marginBottom: 6 }}>
           All listings

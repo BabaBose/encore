@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminPage() {
   const user = await requireRole('admin');
-  const { badges } = await pageContext();
+  const { badges, money } = await pageContext();
   const db = getDb();
 
   const pending = await repo.entertainersAwaitingReview(db);
@@ -36,7 +36,7 @@ export default async function AdminPage() {
   );
 
   return (
-    <Shell user={user} current="/admin" badges={badges}>
+    <Shell user={user} current="/admin" badges={badges} money={money}>
       <div className="page">
         <h1 className="display" style={{ marginBottom: 6 }}>
           Review queue

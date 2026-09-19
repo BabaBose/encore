@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function ModerationPage() {
   const user = await requireRole('admin');
-  const { badges } = await pageContext();
+  const { badges, money } = await pageContext();
   const db = getDb();
 
   const references = await repo.referencesAwaitingModeration(db);
@@ -30,7 +30,7 @@ export default async function ModerationPage() {
   );
 
   return (
-    <Shell user={user} current="/admin/moderation" badges={badges}>
+    <Shell user={user} current="/admin/moderation" badges={badges} money={money}>
       <div className="page" style={{ maxWidth: 860 }}>
         <h1 className="display" style={{ marginBottom: 6 }}>
           Moderation

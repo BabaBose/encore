@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminBookingsPage() {
   const user = await requireRole('admin');
-  const { badges } = await pageContext();
+  const { badges, money } = await pageContext();
   const db = getDb();
   const inquiries = await repo.listAllInquiries(db);
 
@@ -20,7 +20,7 @@ export default async function AdminBookingsPage() {
   const disputes = inquiries.filter((i) => i.status === 'cancelled' && i.cancelReason);
 
   return (
-    <Shell user={user} current="/admin/bookings" badges={badges}>
+    <Shell user={user} current="/admin/bookings" badges={badges} money={money}>
       <div className="page">
         <h1 className="display" style={{ marginBottom: 6 }}>
           Bookings

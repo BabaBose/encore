@@ -22,7 +22,7 @@ export const dynamic = 'force-dynamic';
 export default async function InquiryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser();
-  const { badges } = await pageContext();
+  const { badges, money } = await pageContext();
 
   const db = getDb();
   const inquiry = await repo.getInquiry(db, id);
@@ -46,7 +46,7 @@ export default async function InquiryPage({ params }: { params: Promise<{ id: st
   const existingReview = await repo.reviewForInquiry(db, id);
 
   return (
-    <Shell user={user} current="/app/inquiries" badges={badges}>
+    <Shell user={user} current="/app/inquiries" badges={badges} money={money}>
       <div className="page" style={accentStyle(fresh.entertainerAccent)}>
         <Link href="/app/inquiries" className="eyebrow" style={{ display: 'inline-block', marginBottom: 12 }}>
           ← All inquiries
