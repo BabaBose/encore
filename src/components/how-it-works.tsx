@@ -147,7 +147,7 @@ export function HowItWorks() {
         </p>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(340px, 100%), 1fr))', gap: 20 }}>
         <Column
           eyebrow="For artists"
           title="Get booked without the back-and-forth"

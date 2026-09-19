@@ -1,10 +1,17 @@
 /**
- * The persistent left rail (a bottom tab bar on mobile, per the designs).
- * What it lists depends on who is signed in, since a venue and an entertainer
- * have almost nothing in common beyond messages.
+ * The header that sits above every page: the lockup on the left, the menu
+ * beside it, the account actions on the right. What the menu lists depends on
+ * who is signed in, since a venue and an entertainer have almost nothing in
+ * common beyond messages.
+ *
+ * On a phone the menu leaves the header for a bottom tab bar — a row of six
+ * destinations does not fit next to a logo at 390px, and a thumb reaches the
+ * bottom of the screen more easily than the top. The header stays, so the
+ * brand and the account action are on every screen at every width.
  */
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
+import { ThemeToggle } from '@/components/theme';
 import { BRAND_NAME } from '@/lib/brand';
 import type { SessionUser } from '@/lib/auth';
 
@@ -71,53 +78,69 @@ export function Shell({
   children: React.ReactNode;
 }) {
   const items = navFor(user);
+
+  /** The same destinations twice: once in the header, once in the tab bar. */
+  function links(variant: 'topbar' | 'tabbar') {
+    return items.map((item) => {
+      const badge = badges[item.href];
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          className={`${variant}__link`}
+          aria-current={current === item.href ? 'page' : undefined}
+        >
+          {variant === 'tabbar' ? <span className="tabbar__dot" /> : null}
+          {item.label}
+          {badge ? <span className={`${variant}__badge`}>{badge}</span> : null}
+        </Link>
+      );
+    });
+  }
+
   return (
     <div className="shell">
-      <nav className="rail" aria-label="Main">
-        <Link href="/" className="rail__brand" aria-label={BRAND_NAME}>
-          <Logo size={18} />
-        </Link>
-        <div className="rail__nav">
-          {items.map((item) => {
-            const active = current === item.href;
-            const badge = badges[item.href];
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rail__link"
-                aria-current={active ? 'page' : undefined}
-              >
-                <span className="rail__dot" />
-                {item.label}
-                {badge ? <span className="rail__badge">{badge}</span> : null}
+      <header className="topbar">
+        <div className="topbar__inner">
+          <Link href="/" className="topbar__brand" aria-label={BRAND_NAME}>
+            <Logo />
+          </Link>
+          <nav className="topbar__nav" aria-label="Main">
+            {links('topbar')}
+          </nav>
+          <div className="topbar__actions">
+            {user ? (
+              <>
+                <div className="topbar__who">
+                  <div style={{ fontWeight: 600, color: 'var(--ink)' }}>{user.displayName}</div>
+                  <div className="eyebrow">{user.role}</div>
+                </div>
+                <form action="/api/signout" method="post">
+                  <button className="btn btn--sm btn--ghost" type="submit">
+                    Sign out
+                  </button>
+                </form>
+              </>
+            ) : (
+              <Link href="/signup" className="btn btn--sm">
+                {/* One flex item, so the words are separated by a word space and
+                    not by the button's 8px gap. Shortens to "Join" on a phone. */}
+                <span>
+                  Join<span className="hide-sm">&#32;Book the Act</span>
+                </span>
               </Link>
-            );
-          })}
+            )}
+            <ThemeToggle />
+          </div>
         </div>
-        <div className="rail__foot">
-          {user ? (
-            <>
-              <div>
-                <div style={{ fontWeight: 600, color: 'var(--ink)' }}>{user.displayName}</div>
-                <div className="eyebrow">{user.role}</div>
-              </div>
-              <form action="/api/signout" method="post">
-                <button className="btn btn--sm btn--ghost" type="submit">
-                  Sign out
-                </button>
-              </form>
-            </>
-          ) : (
-            <Link href="/signup" className="btn btn--sm">
-              Join Book the Act
-            </Link>
-          )}
-        </div>
+      </header>
+
+      <main className="main">{children}</main>
+
+      {/* Phone only. Hidden from the accessibility tree at wider widths. */}
+      <nav className="tabbar" aria-label="Main">
+        {links('tabbar')}
       </nav>
-      <main className="main">
-        {children}
-      </main>
     </div>
   );
 }

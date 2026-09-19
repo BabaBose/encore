@@ -67,19 +67,17 @@ export default async function HomePage() {
   return (
     <Shell user={user} current="/" badges={badges}>
       <div className="page">
-        <header style={{ marginBottom: 20 }}>
-          <h1 className="display" style={{ marginBottom: 8, maxWidth: '16ch' }}>
-            {/* The accent lands on the second half, as in the brand design. */}
-            Great nights start with <span style={{ color: 'var(--accent)' }}>great acts.</span>
-          </h1>
-          <p className="lede">
-            Live availability, published rates and real portfolios. See what an act costs on your date before you
-            send a single message.
-          </p>
-        </header>
-
         <div style={{ marginBottom: 36 }}>
-          <HeroImage />
+          <HeroImage>
+            <h1 className="hero-title">
+              {/* The accent lands on the second half, as in the brand design. */}
+              Great nights start with <em>great acts.</em>
+            </h1>
+            <p className="hero-lede">
+              Live availability, published rates and real portfolios. See what an act costs on your date before
+              you send a single message.
+            </p>
+          </HeroImage>
         </div>
 
         {hero ? (

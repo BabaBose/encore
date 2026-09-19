@@ -17,7 +17,8 @@ export function ThemeScript() {
   return <script dangerouslySetInnerHTML={{ __html: script }} />;
 }
 
-/** Both themes were designed, so the visitor gets to pick between them. */
+/** Both themes were designed, so the visitor gets to pick between them. Lives
+ * in the header, where it is out of the way of the phone tab bar. */
 export function ThemeToggle() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
@@ -41,7 +42,7 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       className="btn btn--sm"
-      style={{ position: 'fixed', right: 16, bottom: 16, zIndex: 50, borderRadius: 999 }}
+      style={{ borderRadius: 999, width: 32, height: 32, padding: 0, flex: 'none' }}
       aria-label={`Switch to the ${theme === 'dark' ? 'light' : 'dark'} theme`}
     >
       {theme === 'dark' ? '☀' : '☾'}

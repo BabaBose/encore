@@ -1,19 +1,20 @@
 /**
- * The landing-page hero: a late set in a supper club.
+ * The landing-page hero: a late set in a supper club, with the tagline on it.
  *
  * `HERO_IMAGE.src` in `src/lib/brand.ts` points at the photograph in `public/`.
- * The photograph carries its own signage and the tagline already sits directly
- * above the hero on the page, so a caption goes over the illustration only —
- * repeating the line on top of the photo just crowds it.
+ * Whatever is passed as children is laid over the bottom-left of the frame, on
+ * a scrim heavy enough to carry small text over a busy photo. That text is
+ * always over a dark image, so it sets its own light-on-dark colours rather
+ * than inheriting the theme's.
  *
  * With no photograph this draws the scene below instead, so the page reads as
  * finished rather than as a hole where an image should be. The drawing is
  * deliberately stylised: a flat illustration that commits to being one looks
  * composed, a half-hearted run at photorealism looks broken.
  */
-import { HERO_IMAGE, TAGLINE } from '@/lib/brand';
+import { HERO_IMAGE } from '@/lib/brand';
 
-export function HeroImage() {
+export function HeroImage({ children }: { children?: React.ReactNode }) {
   const photo = HERO_IMAGE.src;
   return (
     <div className="hero-frame">
@@ -32,34 +33,9 @@ export function HeroImage() {
         <SupperClubScene />
       )}
 
-      {/* Seats the image on the page: dark at the very bottom edge, clear above. */}
       <div className="hero-scrim" />
 
-      {photo ? null : (
-        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '26px 30px' }}>
-          <div
-            style={{
-              font: '500 10.5px var(--font-mono)',
-              letterSpacing: '0.16em',
-              textTransform: 'uppercase',
-              color: '#ffffff8c',
-              marginBottom: 8,
-            }}
-          >
-            Tonight, somewhere
-          </div>
-          <div
-            style={{
-              font: '800 clamp(20px, 3.2vw, 34px)/1.1 var(--font-sans)',
-              letterSpacing: '-0.04em',
-              color: '#f6f2ee',
-              maxWidth: '18ch',
-            }}
-          >
-            {TAGLINE}
-          </div>
-        </div>
-      )}
+      {children ? <div className="hero-overlay">{children}</div> : null}
     </div>
   );
 }

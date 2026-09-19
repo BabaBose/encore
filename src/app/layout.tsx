@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { ThemeScript, ThemeToggle } from '@/components/theme';
+import { ThemeScript } from '@/components/theme';
 import { BRAND_NAME, DESCRIPTION, TAGLINE } from '@/lib/brand';
 
 export const metadata: Metadata = {
@@ -25,7 +25,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         {children}
-        <ThemeToggle />
       </body>
     </html>
   );

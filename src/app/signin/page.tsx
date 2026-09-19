@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import { SignInForm } from '@/components/auth-forms';
-import { Logo } from '@/components/logo';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +10,6 @@ export default async function SignInPage() {
   return (
     <Shell user={null} current="/signin">
       <div className="page" style={{ maxWidth: 460 }}>
-        <Logo size={26} tagline style={{ marginBottom: 26 }} />
         <h1 className="display" style={{ marginBottom: 6 }}>
           Sign in
         </h1>

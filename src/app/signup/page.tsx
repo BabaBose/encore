@@ -4,7 +4,6 @@ import { getDb } from '@/db/client';
 import * as repo from '@/db/repo';
 import { Shell } from '@/components/shell';
 import { SignUpForm } from '@/components/auth-forms';
-import { Logo } from '@/components/logo';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +13,6 @@ export default async function SignUpPage() {
   return (
     <Shell user={null} current="/signup">
       <div className="page" style={{ maxWidth: 480 }}>
-        <Logo size={26} tagline style={{ marginBottom: 26 }} />
         <h1 className="display" style={{ marginBottom: 6 }}>
           Join Book the Act
         </h1>
