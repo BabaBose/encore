@@ -62,7 +62,7 @@ export default async function CalendarPage({
           <div className="stack" style={{ gap: 24 }}>
             <section>
               <SectionHead title="Next six months" />
-              <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))' }}>
+              <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(210px, 100%), 1fr))' }}>
                 {[0, 1, 2, 3, 4, 5].map((offset) => {
                   const total = m - 1 + offset;
                   const year = y + Math.floor(total / 12);

@@ -104,7 +104,7 @@ export default async function AppHome() {
           </div>
         ) : null}
 
-        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', marginBottom: 28 }}>
+        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', marginBottom: 28 }}>
           <section className="panel">
             <div className="panel__head spread">
               <span className="eyebrow">Incoming</span>
@@ -172,7 +172,7 @@ export default async function AppHome() {
               </Link>
             }
           />
-          <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+          <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))' }}>
             {[0, 1, 2].map((offset) => {
               const total = m - 1 + offset;
               const year = y + Math.floor(total / 12);

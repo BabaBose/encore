@@ -194,7 +194,7 @@ export default async function ProfilePage({
               />
               {act.acceptsShortTerm ? (
                 <>
-                  <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                  <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))' }}>
                     {months.map((mm) => (
                       <div key={`${mm.year}-${mm.month}`} className="card">
                         <div className="eyebrow" style={{ marginBottom: 10 }}>

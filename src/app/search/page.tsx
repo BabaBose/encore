@@ -61,6 +61,22 @@ function readQuery(p: Params): SearchQuery {
 export default async function SearchPage({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams;
   const query = readQuery(params);
+  // What the collapsed panel reports on a phone: how many filters are doing
+  // something. Gig type always has a value, so it is not a narrowing.
+  const activeFilters = [
+    query.cityId,
+    query.category,
+    query.genres?.length ? query.genres[0] : null,
+    query.countryOfOrigin,
+    query.date,
+    query.dateEnd,
+    query.timeBlock,
+    query.months,
+    query.startDate,
+    query.budgetMax,
+    query.minRating,
+    query.verifiedOnly || null,
+  ].filter(Boolean).length;
   const { user, badges, money } = await pageContext();
 
   const db = getDb();
@@ -95,12 +111,24 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
   return (
     <Shell user={user} current="/search" badges={badges} money={money}>
-      <div className="page page--wide" style={{ display: 'grid', gridTemplateColumns: '286px minmax(0, 1fr)', gap: 28, alignItems: 'start' }}>
-        <form className="panel sticky" method="get" action="/search">
-          <div className="panel__head">
+      <div className="page page--wide search-layout">
+        <form className="panel filters sticky" method="get" action="/search">
+          {/*
+            The panel collapses on a phone, where the form is taller than the
+            screen and would otherwise bury every result under it. A checkbox
+            rather than a script: this page works without JavaScript, and it
+            has no name so it is never submitted with the query. At desktop
+            widths the media query forces the body open and hides the control.
+          */}
+          <input type="checkbox" id="filters-open" className="filters__switch" />
+          <label className="panel__head filters__head" htmlFor="filters-open">
             <span className="eyebrow">Filters</span>
-          </div>
-          <div className="panel__body stack" style={{ gap: 16 }}>
+            <span className="filters__state">
+              {activeFilters ? `${activeFilters} applied` : 'None applied'}
+            </span>
+            <span className="filters__chevron" aria-hidden="true" />
+          </label>
+          <div className="panel__body filters__body stack" style={{ gap: 16 }}>
             {/* The toggle that changes what "available" means. */}
             <div className="field">
               <span className="field__label">Gig type</span>

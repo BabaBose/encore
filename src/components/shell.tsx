@@ -20,6 +20,14 @@ import {
 import { BRAND_NAME } from "@/lib/brand";
 import type { SessionUser } from "@/lib/auth";
 
+/** What the phone's account chip says. "entertainer" is too long for 320px. */
+const ROLE_CHIP: Record<string, string> = {
+  entertainer: 'Act',
+  venue: 'Venue',
+  agency: 'Agency',
+  admin: 'Staff',
+};
+
 export interface NavItem {
   href: string;
   label: string;
@@ -128,7 +136,17 @@ export function Shell({
                     </div>
                     <div className="eyebrow">{user.role}</div>
                   </Link>
-                  <form action="/api/signout" method="post">
+                  {/*
+                    The phone header has room for the lockup, one account
+                    control and the two display controls — not for a name, a
+                    sign-out and all of that. Below 900px this collapses to a
+                    single chip that goes to the account page, where sign-out
+                    also lives.
+                  */}
+                  <Link href="/app/account" className="topbar__chip" aria-label="Your account">
+                    {ROLE_CHIP[user.role] ?? user.role}
+                  </Link>
+                  <form action="/api/signout" method="post" className="topbar__signout">
                     <button className="btn btn--sm btn--ghost" type="submit">
                       Sign out
                     </button>

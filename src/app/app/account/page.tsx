@@ -57,9 +57,19 @@ export default async function AccountPage() {
           </div>
         </section>
 
-        <section>
+        <section style={{ marginBottom: 32 }}>
           <SectionHead title="Change password" />
           <ChangePasswordForm />
+        </section>
+
+        <section>
+          {/* The header has no room for this on a phone, so it lives here too. */}
+          <SectionHead title="Sign out" />
+          <form action="/api/signout" method="post">
+            <button className="btn btn--ghost" type="submit">
+              Sign out on this device
+            </button>
+          </form>
         </section>
       </div>
     </Shell>
