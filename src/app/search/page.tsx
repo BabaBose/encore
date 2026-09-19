@@ -15,7 +15,7 @@ import { CONTRACT_LENGTHS, type ContractLength, type GigType, type TopCategory }
 import { pageContext } from '@/lib/page-data';
 import { Shell } from '@/components/shell';
 import { ActCard, Chip, Empty } from '@/components/ui';
-import { parseMoney } from '@/lib/format';
+import { formatDateShort, parseMoney } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -303,7 +303,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
           <div className="row row--tight" style={{ marginBottom: 18 }}>
             {longTerm && !query.cityId ? <Chip accent>Global pool — no city set</Chip> : null}
-            {query.date ? <Chip>{query.date}</Chip> : null}
+            {query.date ? <Chip>{formatDateShort(query.date)}</Chip> : null}
             {query.months ? <Chip>{query.months} months</Chip> : null}
             {query.category ? <Chip>{categories.find((c) => c.slug === query.category)?.label}</Chip> : null}
             {query.verifiedOnly ? <Chip accent>Verified only</Chip> : null}
@@ -341,7 +341,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                         ? 'Will relocate'
                         : null
                   }
-                  priceNote={r.exactRate ? (longTerm ? null : `on ${query.date}`) : null}
+                  priceNote={r.exactRate && query.date ? `on ${formatDateShort(query.date)}` : null}
                 />
               ))}
             </div>
