@@ -2,7 +2,8 @@ node_modules/
 .next/
 out/
 data/*.db
-data/*.db-journal
+data/*.db-*
+e2e-check.mjs
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
