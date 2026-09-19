@@ -45,7 +45,10 @@ export function formatDateShort(iso: string): string {
   });
 }
 
-/** Relative time for message and notification lists. */
+/**
+ * Relative time for message and notification lists. Terse by design — these sit
+ * at the end of a dense row. Use `timeSince` where the caller wants a phrase.
+ */
 export function timeAgo(isoTimestamp: string, now: Date = new Date()): string {
   const then = new Date(isoTimestamp).getTime();
   const seconds = Math.max(0, Math.round((now.getTime() - then) / 1000));
@@ -61,4 +64,18 @@ export function timeAgo(isoTimestamp: string, now: Date = new Date()): string {
 
 export function clockTime(isoTimestamp: string): string {
   return new Date(isoTimestamp).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+/** A full phrase: "just now", "14 minutes ago", "3 days ago". */
+export function timeSince(isoTimestamp: string, now: Date = new Date()): string {
+  const seconds = Math.max(0, Math.round((now.getTime() - new Date(isoTimestamp).getTime()) / 1000));
+  if (seconds < 60) return 'just now';
+  const plural = (n: number, unit: string) => `${n} ${unit}${n === 1 ? '' : 's'} ago`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return plural(minutes, 'minute');
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return plural(hours, 'hour');
+  const days = Math.round(hours / 24);
+  if (days < 30) return plural(days, 'day');
+  return `on ${formatDate(isoTimestamp.slice(0, 10))}`;
 }

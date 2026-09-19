@@ -826,6 +826,8 @@ export interface InquiryRow {
   entertainerName: string;
   entertainerSlug: string;
   entertainerUserId: string;
+  /** Set when an agency or manager represents the act, so they can act too. */
+  entertainerManagerId: string | null;
   entertainerAccent: string;
   gigType: GigType;
   startDate: IsoDate | null;
@@ -852,7 +854,8 @@ export interface InquiryRow {
 const INQUIRY_SELECT = `
   SELECT i.*, v.name AS venue_name, v.user_id AS venue_user_id,
          e.stage_name AS entertainer_name, e.slug AS entertainer_slug,
-         e.user_id AS entertainer_user_id, e.cover_accent AS entertainer_accent,
+         e.user_id AS entertainer_user_id, e.managed_by_user_id AS entertainer_manager_id,
+         e.cover_accent AS entertainer_accent,
          city.name AS city_name
   FROM inquiries i
   JOIN venues v ON v.id = i.venue_id
@@ -870,6 +873,7 @@ function mapInquiry(r: Record<string, unknown>): InquiryRow {
     entertainerName: r.entertainer_name as string,
     entertainerSlug: r.entertainer_slug as string,
     entertainerUserId: r.entertainer_user_id as string,
+    entertainerManagerId: (r.entertainer_manager_id as string | null) ?? null,
     entertainerAccent: r.entertainer_accent as string,
     gigType: r.gig_type as GigType,
     startDate: (r.start_date as string | null) ?? null,

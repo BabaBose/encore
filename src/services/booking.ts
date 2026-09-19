@@ -123,13 +123,18 @@ export function sendInquiry(db: Db, draft: InquiryDraft): string {
     });
 
     const venue = repo.getVenueById(db, draft.venueId);
-    repo.notify(db, {
-      userId: entertainer.userId,
-      kind: 'inquiry_received',
-      title: `New inquiry from ${venue?.name ?? 'a venue'}`,
-      body: `${quote.label} · ${formatMoney(offer, quote.currency)}`,
-      link: `/app/inquiries/${id}`,
-    });
+    const title = `New inquiry from ${venue?.name ?? 'a venue'}`;
+    const body = `${quote.label} · ${formatMoney(offer, quote.currency)}`;
+    repo.notify(db, { userId: entertainer.userId, kind: 'inquiry_received', title, body, link: `/app/inquiries/${id}` });
+    if (entertainer.managedByUserId) {
+      repo.notify(db, {
+        userId: entertainer.managedByUserId,
+        kind: 'inquiry_received',
+        title: `${entertainer.stageName}: ${title.toLowerCase()}`,
+        body,
+        link: `/app/inquiries/${id}`,
+      });
+    }
     return id;
   });
 
@@ -275,6 +280,16 @@ function notifyBothParties(
     body: `${whenLabel} · ${amount}`,
     link,
   });
+  // An agency handling the act's calendar needs to hear it too.
+  if (inquiry.entertainerManagerId) {
+    repo.notify(db, {
+      userId: inquiry.entertainerManagerId,
+      kind: `inquiry_${status}`,
+      title: `${inquiry.entertainerName}: ${pair.entertainer}`,
+      body: `${whenLabel} · ${amount}`,
+      link,
+    });
+  }
 }
 
 /** Post-gig verified review, only ever from a completed booking. */
@@ -338,6 +353,7 @@ export function accessRoleFor(
 ): InquiryActor | null {
   if (user.role === 'admin') return 'admin';
   if (user.id === inquiry.venueUserId) return 'venue';
-  if (user.id === inquiry.entertainerUserId) return 'entertainer';
+  // An agency or manager acts on behalf of the act it represents.
+  if (user.id === inquiry.entertainerUserId || user.id === inquiry.entertainerManagerId) return 'entertainer';
   return null;
 }
