@@ -329,7 +329,7 @@ export async function submitForReviewAction(_prev: ActionState, data: FormData):
     const { db, user, ent } = await ownEntertainer(str(data, 'entertainerId') || undefined);
     moveProfile(db, { entertainerId: ent.id, to: 'pending_review', role: user.role });
     revalidatePath('/app/profile');
-    return { ok: 'Sent to Encore for review' };
+    return { ok: 'Sent to Book the Act for review' };
   });
 }
 
@@ -378,7 +378,7 @@ export async function addReferenceAction(_prev: ActionState, data: FormData): Pr
     });
     revalidatePath('/app/profile');
     // Self-submitted references are moderated before they appear.
-    return { ok: 'Added — it appears once Encore has checked it' };
+    return { ok: 'Added — it appears once Book the Act has checked it' };
   });
 }
 

@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeScript, ThemeToggle } from '@/components/theme';
+import { BRAND_NAME, DESCRIPTION, TAGLINE } from '@/lib/brand';
 
 export const metadata: Metadata = {
-  title: 'Encore — book live entertainment',
-  description:
-    'A two-sided marketplace connecting restaurants and hotels with entertainers: searchable profiles, live availability and published rates.',
+  title: { default: `${BRAND_NAME} — ${TAGLINE}`, template: `%s · ${BRAND_NAME}` },
+  description: DESCRIPTION,
+  applicationName: BRAND_NAME,
+  openGraph: { title: BRAND_NAME, description: TAGLINE, siteName: BRAND_NAME, type: 'website' },
+  manifest: '/manifest.webmanifest',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

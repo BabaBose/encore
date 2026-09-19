@@ -1,14 +1,14 @@
 {
-  "name": "encore",
+  "name": "book-the-act",
   "version": "0.1.0",
   "private": true,
-  "description": "Encore — a two-sided marketplace connecting venues with entertainers.",
+  "description": "Book the Act \u2014 a two-sided marketplace connecting venues with entertainers.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "seed": "tsx scripts/seed.ts",
-    "reset": "rm -f data/encore.db && npm run seed",
+    "reset": "rm -f data/booktheact.db && npm run seed",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

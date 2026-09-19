@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-const KEY = 'encore-theme';
+const KEY = 'booktheact-theme';
 
 /**
  * Applied before paint so a light-theme visitor never sees a dark flash. It has

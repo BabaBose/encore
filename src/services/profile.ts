@@ -79,7 +79,7 @@ export function setVerified(db: Db, entertainerId: string, verified: boolean): v
       repo.notify(db, {
         userId: e.userId,
         kind: 'verified',
-        title: 'You are now a verified act on Encore',
+        title: 'You are now a verified act on Book the Act',
         body: 'Your identity and business documents checked out.',
         link: '/app/profile',
       });

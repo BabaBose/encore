@@ -8,11 +8,11 @@ import { STATUS_LABEL, STATUS_TONE } from '@/domain/inquiry';
 import type { InquiryStatus } from '@/domain/types';
 import { formatMoneyShort } from '@/lib/format';
 import { MATCH_REASON_LABEL, type MatchReason } from '@/domain/search';
+import { accentStyle, resolveAccent } from '@/lib/accents';
 
-/** Every act tints its own surfaces from its accent. */
-export function accentStyle(accent: string): CSSProperties {
-  return { ['--accent' as string]: accent };
-}
+// Re-exported so component callers keep importing their styling helpers from
+// one place.
+export { accentStyle, resolveAccent };
 
 export function Art({
   accent,
@@ -90,7 +90,7 @@ export function ActCard(props: ActCardProps) {
       <Art accent={props.accent} className="act-card__art">
         {props.badge ? <span className="pill pill--accent">{props.badge}</span> : <span />}
         {props.verified ? (
-          <span className="pill pill--positive" title="Identity verified by Encore">
+          <span className="pill pill--positive" title="Identity verified by Book the Act">
             ✓
           </span>
         ) : null}

@@ -1,4 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Encore">
-  <rect width="64" height="64" rx="14" fill="#131315"/>
-  <path d="M20 17h25v8.5H29v5.2h14v8.2H29v5.6h16.4V53H20z" fill="#ff5fa2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Book the Act">
+  <!--
+    The app-tile variant of the mark: a solid accent tile with the three-by-three
+    grid knocked out of it, the centre cell at full strength. Proportions match
+    the brand design's 72px tile, scaled to 64.
+  -->
+  <rect width="64" height="64" rx="15" fill="#ff5fa2"/>
+  <g fill="#12000a" fill-opacity="0.24">
+    <rect x="11.5" y="11.5" width="11.5" height="11.5" rx="1.8"/>
+    <rect x="26.25" y="11.5" width="11.5" height="11.5" rx="1.8"/>
+    <rect x="41" y="11.5" width="11.5" height="11.5" rx="1.8"/>
+    <rect x="11.5" y="26.25" width="11.5" height="11.5" rx="1.8"/>
+    <rect x="41" y="26.25" width="11.5" height="11.5" rx="1.8"/>
+    <rect x="11.5" y="41" width="11.5" height="11.5" rx="1.8"/>
+    <rect x="26.25" y="41" width="11.5" height="11.5" rx="1.8"/>
+    <rect x="41" y="41" width="11.5" height="11.5" rx="1.8"/>
+  </g>
+  <rect x="26.25" y="26.25" width="11.5" height="11.5" rx="1.8" fill="#12000a"/>
 </svg>

@@ -12,11 +12,11 @@ import { dirname, join } from 'node:path';
 
 export type Db = Database.Database;
 
-const DEFAULT_PATH = join(process.cwd(), 'data', 'encore.db');
+const DEFAULT_PATH = join(process.cwd(), 'data', 'booktheact.db');
 
 let instance: Db | null = null;
 
-export function openDatabase(path: string = process.env.ENCORE_DB_PATH ?? DEFAULT_PATH): Db {
+export function openDatabase(path: string = process.env.BOOKTHEACT_DB_PATH ?? DEFAULT_PATH): Db {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
   const db = new Database(path);
   db.pragma('journal_mode = WAL');

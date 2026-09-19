@@ -17,7 +17,7 @@ import { sendInquiry, transitionInquiry, postMessage, leaveReview } from '../src
 import { addDays } from '../src/domain/dates';
 import type { ContractLength, ResidencyInquiryPolicy, TimeBlock, Weekday } from '../src/domain/types';
 
-const DB_PATH = process.env.ENCORE_DB_PATH ?? join(process.cwd(), 'data', 'encore.db');
+const DB_PATH = process.env.BOOKTHEACT_DB_PATH ?? join(process.cwd(), 'data', 'booktheact.db');
 
 // Wipe first so seeding is repeatable rather than additive.
 for (const suffix of ['', '-wal', '-shm']) {
@@ -161,7 +161,7 @@ const standardRules = (weekdayEve: number, weekendEve: number, day: number): Arr
 const acts: ActSeed[] = [
   {
     name: 'Nadia Rahim',
-    email: 'nadia@encore.test',
+    email: 'nadia@booktheact.test',
     shortBio: 'Neo-soul vocalist for rooftop and lounge sets.',
     fullBio:
       'Nadia has fronted rooftop residencies across the Gulf for six years, moving between a stripped-back duo and a full six-piece band. Her sets lean neo-soul and jazz-adjacent R&B, built to sit under conversation early and lift a room after eleven.',
@@ -198,7 +198,7 @@ const acts: ActSeed[] = [
         approved: true,
       },
     ],
-    videos: ['https://www.youtube.com/watch?v=encore-nadia-rooftop', 'https://vimeo.com/encore-nadia-duo'],
+    videos: ['https://www.youtube.com/watch?v=bta-nadia-rooftop', 'https://vimeo.com/bta-nadia-duo'],
     photos: 4,
     blocks: [
       { from: 3, to: 4, note: 'Recording' },
@@ -207,7 +207,7 @@ const acts: ActSeed[] = [
   },
   {
     name: 'The Amber Quartet',
-    email: 'amber@encore.test',
+    email: 'amber@booktheact.test',
     shortBio: 'Jazz ensemble — standards, bossa and late-night bebop.',
     fullBio:
       'A four-piece built for hotel lobbies and long dinner services: upright bass, piano, drums and a rotating horn chair. The Amber Quartet has held two multi-month residencies in Downtown Dubai and travels as a unit.',
@@ -240,7 +240,7 @@ const acts: ActSeed[] = [
     references: [
       { quote: 'Six months, five nights a week, never once a problem. The band the room was built around.', client: 'Marrow & Vine', approved: true },
     ],
-    videos: ['https://www.youtube.com/watch?v=encore-amber-quartet'],
+    videos: ['https://www.youtube.com/watch?v=bta-amber-quartet'],
     photos: 3,
     blocks: [
       { from: 10, to: 11, note: 'Touring' },
@@ -251,7 +251,7 @@ const acts: ActSeed[] = [
   },
   {
     name: 'Kael Voss',
-    email: 'kael@encore.test',
+    email: 'kael@booktheact.test',
     shortBio: 'Close-up magician working tables in 25-minute rotations.',
     fullBio:
       'Kael works the room rather than a stage — sleight of hand at the table, built around 25-minute rotations so a full restaurant sees him across a service. Equally at home in a private dining room.',
@@ -274,12 +274,12 @@ const acts: ActSeed[] = [
     specials: [{ offsetFromNye: 0, label: "New Year's Eve", hourly: 190000, min: 3 }],
     verified: false,
     featured: true,
-    videos: ['https://www.instagram.com/reel/encore-kael-closeup'],
+    videos: ['https://www.instagram.com/reel/bta-kael-closeup'],
     photos: 2,
   },
   {
     name: 'Yusuf Barak',
-    email: 'yusuf@encore.test',
+    email: 'yusuf@booktheact.test',
     shortBio: 'Solo jazz piano — brunch through to late service.',
     fullBio:
       'Twenty years of hotel piano across Beirut and the Gulf. Yusuf reads a room quickly, moves between standards and Arabic repertoire, and is happy to play four hours without a set list.',
@@ -304,12 +304,12 @@ const acts: ActSeed[] = [
     residency: { monthly: 1100000, weekly: 290000, days: 6, extraDay: 60000 },
     verified: true,
     awards: [{ title: 'Long Service, Live Music', issuer: 'Emirates Hospitality Guild', year: 2023 }],
-    videos: ['https://www.youtube.com/watch?v=encore-yusuf-brunch'],
+    videos: ['https://www.youtube.com/watch?v=bta-yusuf-brunch'],
     photos: 2,
   },
   {
     name: 'Lena Marr',
-    email: 'lena@encore.test',
+    email: 'lena@booktheact.test',
     shortBio: 'Soul and piano-vocal duo, Abu Dhabi based.',
     fullBio:
       'Lena performs solo at the piano or as a duo with guitar. Her repertoire runs soul and slow-burn pop, and she has held two winter residencies on the Corniche.',
@@ -333,12 +333,12 @@ const acts: ActSeed[] = [
     rules: standardRules(45000, 55000, 38000),
     residency: { monthly: 1300000, days: 4, extraDay: 85000 },
     verified: false,
-    videos: ['https://www.youtube.com/watch?v=encore-lena-duo'],
+    videos: ['https://www.youtube.com/watch?v=bta-lena-duo'],
     photos: 3,
   },
   {
     name: 'Dario Sette',
-    email: 'dario@encore.test',
+    email: 'dario@booktheact.test',
     shortBio: 'Jazz trio for dinner service and late sets.',
     fullBio:
       'Piano, bass and brushed drums. Dario builds the set around the service — quiet under the first sitting, opening up after ten.',
@@ -360,12 +360,12 @@ const acts: ActSeed[] = [
     minimumHours: 3,
     rules: standardRules(100000, 120000, 85000),
     residency: { monthly: 1800000, days: 5, extraDay: 130000 },
-    videos: ['https://www.youtube.com/watch?v=encore-dario-trio'],
+    videos: ['https://www.youtube.com/watch?v=bta-dario-trio'],
     photos: 2,
   },
   {
     name: 'Ines Quist',
-    email: 'ines@encore.test',
+    email: 'ines@booktheact.test',
     shortBio: 'Classical cello and strings for lobbies and ceremonies.',
     fullBio:
       'Ines plays solo cello or brings a string trio. Her programme runs baroque through to arranged contemporary covers, and she is used to playing to a room that is not listening yet.',
@@ -386,12 +386,12 @@ const acts: ActSeed[] = [
     minimumHours: 2,
     rules: standardRules(30000, 38000, 28000),
     verified: true,
-    videos: ['https://www.youtube.com/watch?v=encore-ines-cello'],
+    videos: ['https://www.youtube.com/watch?v=bta-ines-cello'],
     photos: 2,
   },
   {
     name: 'Sable',
-    email: 'sable@encore.test',
+    email: 'sable@booktheact.test',
     shortBio: 'Open-format and deep house DJ, late slots.',
     fullBio:
       'Sable plays the back half of the night — deep house into open format, reading the floor rather than running a prepared set. Brings controller and needs only a booth feed.',
@@ -415,12 +415,12 @@ const acts: ActSeed[] = [
     rules: standardRules(90000, 110000, 70000),
     specials: [{ offsetFromNye: 0, label: "New Year's Eve", hourly: 290000, min: 4 }],
     residency: { monthly: 1600000, days: 4, extraDay: 110000 },
-    videos: ['https://www.youtube.com/watch?v=encore-sable-set'],
+    videos: ['https://www.youtube.com/watch?v=bta-sable-set'],
     photos: 3,
   },
   {
     name: 'Kestrel Strings',
-    email: 'kestrel@encore.test',
+    email: 'kestrel@booktheact.test',
     shortBio: 'String quartet — ceremonies, arrivals and long lunches.',
     fullBio:
       'Four players, arranged pop as readily as Vivaldi. Kestrel is a London-based quartet that takes multi-month hotel contracts abroad and handles its own travel.',
@@ -443,12 +443,12 @@ const acts: ActSeed[] = [
     rules: standardRules(110000, 130000, 100000),
     residency: { monthly: 1500000, days: 5, extraDay: 120000 },
     verified: true,
-    videos: ['https://www.youtube.com/watch?v=encore-kestrel-quartet'],
+    videos: ['https://www.youtube.com/watch?v=bta-kestrel-quartet'],
     photos: 2,
   },
   {
     name: 'Brass Rule',
-    email: 'brass@encore.test',
+    email: 'brass@booktheact.test',
     shortBio: 'Seven-piece brass band for parties and openings.',
     fullBio:
       'Loud, mobile and built for a crowd that is already standing. Brass Rule plays without amplification and can walk a room.',
@@ -469,12 +469,12 @@ const acts: ActSeed[] = [
     minimumHours: 2,
     rules: standardRules(150000, 190000, 140000),
     residency: { monthly: 2200000, days: 3, extraDay: 200000 },
-    videos: ['https://www.youtube.com/watch?v=encore-brass-rule'],
+    videos: ['https://www.youtube.com/watch?v=bta-brass-rule'],
     photos: 2,
   },
   {
     name: 'Mira Deyn',
-    email: 'mira@encore.test',
+    email: 'mira@booktheact.test',
     shortBio: 'Arabic and pop vocalist, agency represented.',
     fullBio:
       'Mira sings Arabic standards and contemporary pop, and works with a band or to backing tracks. Represented by Northline Artists, who handle her calendar and contracts.',
@@ -497,13 +497,13 @@ const acts: ActSeed[] = [
     minimumHours: 3,
     rules: standardRules(70000, 88000, 60000),
     residency: { monthly: 1450000, days: 4, extraDay: 100000 },
-    managedBy: 'northline@encore.test',
-    videos: ['https://www.youtube.com/watch?v=encore-mira-set'],
+    managedBy: 'northline@booktheact.test',
+    videos: ['https://www.youtube.com/watch?v=bta-mira-set'],
     photos: 2,
   },
   {
     name: 'Rue Alderic',
-    email: 'rue@encore.test',
+    email: 'rue@booktheact.test',
     shortBio: 'Stand-up, clean sets for corporate rooms.',
     fullBio:
       'Rue writes to the room and works clean by default. Ten years of club sets behind a act that now mostly plays corporate dinners and awards nights.',
@@ -523,7 +523,7 @@ const acts: ActSeed[] = [
     rules: standardRules(80000, 95000, 75000),
     // Submitted but not yet approved — this is what the admin queue shows.
     status: 'pending_review',
-    videos: ['https://www.youtube.com/watch?v=encore-rue-set'],
+    videos: ['https://www.youtube.com/watch?v=bta-rue-set'],
     photos: 1,
   },
 ];
@@ -541,7 +541,7 @@ const insertEnt = db.prepare(
 
 // An agency account first, so the acts it represents can point at it.
 const agencyUser = repo.createUser(db, {
-  email: 'northline@encore.test',
+  email: 'northline@booktheact.test',
   passwordHash: hashPassword('password'),
   role: 'agency',
   displayName: 'Northline Artists',
@@ -684,9 +684,9 @@ interface VenueSeed {
 }
 
 const venueSeeds: VenueSeed[] = [
-  { name: 'The Penthouse', email: 'penthouse@encore.test', type: 'hotel', city: 'dubai' },
-  { name: 'Marrow & Vine', email: 'marrow@encore.test', type: 'restaurant', city: 'dubai' },
-  { name: 'Corniche Grand', email: 'corniche@encore.test', type: 'hotel', city: 'abu-dhabi' },
+  { name: 'The Penthouse', email: 'penthouse@booktheact.test', type: 'hotel', city: 'dubai' },
+  { name: 'Marrow & Vine', email: 'marrow@booktheact.test', type: 'restaurant', city: 'dubai' },
+  { name: 'Corniche Grand', email: 'corniche@booktheact.test', type: 'hotel', city: 'abu-dhabi' },
 ];
 
 const venueIds = new Map<string, string>();
@@ -707,10 +707,10 @@ for (const v of venueSeeds) {
 // ------------------------------------------------------------------- admin --
 
 repo.createUser(db, {
-  email: 'admin@encore.test',
+  email: 'admin@booktheact.test',
   passwordHash: hashPassword('password'),
   role: 'admin',
-  displayName: 'Encore Admin',
+  displayName: 'Book the Act Admin',
 });
 
 // -------------------------------------------------------------- shortlists --
@@ -867,9 +867,9 @@ const counts = {
 
 db.close();
 
-console.log('Seeded Encore:', counts);
+console.log('Seeded Book the Act:', counts);
 console.log('\nSign in with any of these — the password is always `password`:');
-console.log('  venue        penthouse@encore.test');
-console.log('  entertainer  nadia@encore.test');
-console.log('  agency       northline@encore.test');
-console.log('  admin        admin@encore.test');
+console.log('  venue        penthouse@booktheact.test');
+console.log('  entertainer  nadia@booktheact.test');
+console.log('  agency       northline@booktheact.test');
+console.log('  admin        admin@booktheact.test');

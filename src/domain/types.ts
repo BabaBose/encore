@@ -1,5 +1,5 @@
 /**
- * Shared domain vocabulary for Encore.
+ * Shared domain vocabulary for Book the Act.
  *
  * Every type here mirrors a named concept in the logic spec, so the spec can be
  * read alongside the code without a translation step.

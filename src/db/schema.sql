@@ -1,4 +1,4 @@
--- Encore schema.
+-- Book the Act schema.
 --
 -- Money is stored as integer minor units (fils) and dates as bare
 -- `YYYY-MM-DD` text, matching the domain layer. Timestamps are ISO-8601 UTC.

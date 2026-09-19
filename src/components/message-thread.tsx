@@ -36,7 +36,7 @@ export function MessageThread({
       <div className="panel__head">
         <span className="eyebrow">Thread</span>
         <span className="dim" style={{ fontSize: 12 }}>
-          Negotiation and logistics stay on Encore
+          Negotiation and logistics stay on Book the Act
         </span>
       </div>
       <div className="thread" style={{ flex: 1, minHeight: 200 }}>

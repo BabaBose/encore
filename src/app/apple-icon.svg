@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180" role="img" aria-label="Book the Act">
+  <!-- iOS masks its own corners, so the tile is drawn square to the edge. -->
+  <rect width="180" height="180" fill="#ff5fa2"/>
+  <g fill="#12000a" fill-opacity="0.24">
+    <rect x="32" y="32" width="32" height="32" rx="5"/>
+    <rect x="74" y="32" width="32" height="32" rx="5"/>
+    <rect x="116" y="32" width="32" height="32" rx="5"/>
+    <rect x="32" y="74" width="32" height="32" rx="5"/>
+    <rect x="116" y="74" width="32" height="32" rx="5"/>
+    <rect x="32" y="116" width="32" height="32" rx="5"/>
+    <rect x="74" y="116" width="32" height="32" rx="5"/>
+    <rect x="116" y="116" width="32" height="32" rx="5"/>
+  </g>
+  <rect x="74" y="74" width="32" height="32" rx="5" fill="#12000a"/>
+</svg>

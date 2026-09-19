@@ -11,7 +11,7 @@ import { getDb } from '@/db/client';
 import * as repo from '@/db/repo';
 import type { UserRole } from '@/domain/types';
 
-const SESSION_COOKIE = 'encore_session';
+const SESSION_COOKIE = 'booktheact_session';
 const SESSION_DAYS = 30;
 
 export { hashPassword, verifyPassword } from './auth-core';

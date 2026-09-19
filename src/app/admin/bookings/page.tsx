@@ -5,7 +5,7 @@ import * as repo from '@/db/repo';
 import { requireRole } from '@/lib/auth';
 import { pageContext } from '@/lib/page-data';
 import { Shell } from '@/components/shell';
-import { Empty, SectionHead, StatusPill } from '@/components/ui';
+import { Empty, SectionHead, StatusPill, accentStyle } from '@/components/ui';
 import { formatDate, formatMoney, timeAgo } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
@@ -26,7 +26,7 @@ export default async function AdminBookingsPage() {
           Bookings
         </h1>
         <p className="lede" style={{ marginBottom: 26 }}>
-          Every inquiry and booking on Encore, with the reason logged for anything that fell through.
+          Every inquiry and booking on Book the Act, with the reason logged for anything that fell through.
         </p>
 
         {disputes.length ? (
@@ -59,7 +59,7 @@ export default async function AdminBookingsPage() {
               <div className="listing">
                 {inquiries.map((i) => (
                   <Link key={i.id} href={`/app/inquiries/${i.id}`} className="listing__item">
-                    <div className="avatar art" style={{ ['--accent' as string]: i.entertainerAccent }} />
+                    <div className="avatar art" style={accentStyle(i.entertainerAccent)} />
                     <div className="listing__main">
                       <div className="listing__name">
                         {i.venueName} → {i.entertainerName}

@@ -1,6 +1,6 @@
 /**
  * The entertainer's profile panel. Everything a venue reads is authored here;
- * Encore only reviews it.
+ * Book the Act only reviews it.
  */
 import { getDb } from '@/db/client';
 import * as repo from '@/db/repo';
@@ -56,7 +56,7 @@ export default async function ProfileEditorPage({
           </span>
         </div>
         <p className="lede" style={{ marginBottom: 26 }}>
-          You write all of this. Encore reviews it once before it goes live, then again only if something is
+          You write all of this. We review it once before it goes live, then again only if something is
           reported.
         </p>
 

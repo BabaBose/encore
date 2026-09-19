@@ -5,6 +5,7 @@ data/*.db
 data/*.db-*
 e2e-check.mjs
 policy-check.mjs
+brand-check.mjs
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store

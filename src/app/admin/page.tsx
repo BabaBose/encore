@@ -1,7 +1,7 @@
 /**
  * Admin: the review queue.
  *
- * Encore approves, rejects, suspends, verifies and promotes. It does not author
+ * Book the Act approves, rejects, suspends, verifies and promotes. It does not author
  * a profile — everything on one belongs to the act.
  */
 import Link from 'next/link';
@@ -49,7 +49,7 @@ export default async function AdminPage() {
                   <div key={act.id} className="card stack" style={{ gap: 14, ...accentStyle(act.heroAccent) }}>
                     <div className="spread">
                       <div className="row">
-                        <div className="avatar art" style={{ ['--accent' as string]: act.heroAccent }} />
+                        <div className="avatar art" style={accentStyle(act.heroAccent)} />
                         <div>
                           <Link href={`/entertainers/${act.slug}`} className="subtitle">
                             {act.stageName}
@@ -95,7 +95,7 @@ export default async function AdminPage() {
             <div className="listing">
               {live.map((act) => (
                 <div key={act.id} className="listing__item" style={accentStyle(act.heroAccent)}>
-                  <div className="avatar art" style={{ ['--accent' as string]: act.heroAccent }} />
+                  <div className="avatar art" style={accentStyle(act.heroAccent)} />
                   <div className="listing__main">
                     <Link href={`/entertainers/${act.slug}`} className="listing__name">
                       {act.stageName}

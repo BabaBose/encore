@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import { SignInForm } from '@/components/auth-forms';
+import { Logo } from '@/components/logo';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,11 +11,12 @@ export default async function SignInPage() {
   return (
     <Shell user={null} current="/signin">
       <div className="page" style={{ maxWidth: 460 }}>
+        <Logo size={26} tagline style={{ marginBottom: 26 }} />
         <h1 className="display" style={{ marginBottom: 6 }}>
           Sign in
         </h1>
         <p className="lede" style={{ marginBottom: 24 }}>
-          Venues, entertainers, agencies and Encore staff all sign in here.
+          Venues, entertainers, agencies and our staff all sign in here.
         </p>
         <SignInForm />
         <div className="card" style={{ marginTop: 24 }}>
@@ -23,13 +25,13 @@ export default async function SignInPage() {
           </div>
           <dl className="kv">
             <dt>Venue</dt>
-            <dd>penthouse@encore.test</dd>
+            <dd>penthouse@booktheact.test</dd>
             <dt>Act</dt>
-            <dd>nadia@encore.test</dd>
+            <dd>nadia@booktheact.test</dd>
             <dt>Agency</dt>
-            <dd>northline@encore.test</dd>
+            <dd>northline@booktheact.test</dd>
             <dt>Admin</dt>
-            <dd>admin@encore.test</dd>
+            <dd>admin@booktheact.test</dd>
           </dl>
         </div>
       </div>

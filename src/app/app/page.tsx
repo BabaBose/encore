@@ -89,15 +89,15 @@ export default async function AppHome() {
                 <>
                   Your profile is ready.{' '}
                   <Link href="/app/profile" style={{ textDecoration: 'underline' }}>
-                    Send it to Encore for review
+                    Send it to Book the Act for review
                   </Link>
                 </>
               )
             ) : act.status === 'pending_review' ? (
-              <>Encore is reviewing your profile. You will get a notification either way.</>
+              <>We are reviewing your profile. You will get a notification either way.</>
             ) : (
               <>
-                Your profile is suspended.{act.reviewNote ? ` Encore’s note: “${act.reviewNote}”` : ''}
+                Your profile is suspended.{act.reviewNote ? ` Our note: “${act.reviewNote}”` : ''}
               </>
             )}
           </div>
@@ -217,7 +217,7 @@ export default async function AppHome() {
 
         {subscription ? (
           <section>
-            <SectionHead title="Subscription" note="Encore takes no commission on your bookings" />
+            <SectionHead title="Subscription" note="Book the Act takes no commission on your bookings" />
             <div className="card spread">
               <div>
                 <div className="subtitle" style={{ textTransform: 'capitalize' }}>
@@ -273,7 +273,7 @@ async function AgencyRoster({
                 const open = inquiries.filter((i) => ['new', 'viewed', 'countered'].includes(i.status)).length;
                 return (
                   <div key={act.id} className="listing__item" style={accentStyle(act.heroAccent)}>
-                    <div className="avatar art" style={{ ['--accent' as string]: act.heroAccent }} />
+                    <div className="avatar art" style={accentStyle(act.heroAccent)} />
                     <div className="listing__main">
                       <div className="listing__name">{act.stageName}</div>
                       <div className="listing__meta">
@@ -294,7 +294,7 @@ async function AgencyRoster({
           </div>
         ) : (
           <Empty>
-            No acts on your roster yet. Encore links an act to your agency when it is set up — get in touch and we
+            No acts on your roster yet. We link an act to your agency when it is set up — get in touch and we
             will attach them.
           </Empty>
         )}

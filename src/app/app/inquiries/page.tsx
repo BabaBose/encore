@@ -102,7 +102,7 @@ export default async function InquiriesPage() {
                           className="listing__item"
                           style={accentStyle(i.entertainerAccent)}
                         >
-                          <div className="avatar art" style={{ ['--accent' as string]: i.entertainerAccent }} />
+                          <div className="avatar art" style={accentStyle(i.entertainerAccent)} />
                           <div className="listing__main">
                             <div className="listing__name">
                               {counterpart(i)}

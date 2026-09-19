@@ -1,7 +1,7 @@
 /**
  * The rate panel: the grid, the minimum, special dates and the residency
  * package. This is where "published, rule-based rates" are actually authored —
- * nothing here is set by Encore.
+ * nothing here is set by Book the Act.
  */
 import { getDb } from '@/db/client';
 import * as repo from '@/db/repo';

@@ -1,5 +1,5 @@
 /*
- * Encore's design system, taken from the mockups.
+ * The Book the Act design system, taken from the mockups.
  *
  * Both themes were designed, so both ship: the dark canvas is the default and
  * the warm-paper light theme is the alternate. Every colour is a token here and
@@ -21,13 +21,16 @@
   --wash-strong: #ffffff14;
   --shadow: 0 30px 70px #00000090;
   /*
-   * Text sitting on an accent fill. Every genre accent is a mid-to-light
-   * saturated colour, so near-black reads on all of them in both themes —
-   * white would fail on amber and green.
+   * Text sitting on an accent fill. On the dark theme's bright accents that is
+   * near-black; the light theme darkens the accents instead and flips this to
+   * white. See the note on the light palette below.
    */
   --on-accent: #12000a;
 
-  /* Genre accents. Each act carries one; it tints its own surfaces. */
+  /*
+   * Genre accents. Each act carries one; it tints its own surfaces. These are
+   * the dark-canvas values — the light theme has its own set.
+   */
   --pink: #ff5fa2;
   --amber: #ffb43a;
   --green: #3ddc84;
@@ -37,6 +40,12 @@
   --red: #ff4d5e;
 
   --accent: var(--pink);
+
+  /* The logo mark: frame, unlit cells, and the knockouts on the filled tile. */
+  --mark-frame: #ffffff2e;
+  --mark-cell: #ffffff1f;
+  --mark-knockout: #12000a;
+  --mark-knockout-dim: #12000a3d;
 
   --font-sans: Archivo, system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
@@ -65,6 +74,28 @@
   --wash: #0000000a;
   --wash-strong: #0000001a;
   --shadow: 0 30px 70px #0000001c;
+
+  /*
+   * The light theme darkens every accent rather than reusing the dark set.
+   * The bright values are built for a near-black canvas and drop to roughly
+   * 2.5:1 on warm paper, which fails for the small text that carries them —
+   * a rate on a card, a match reason, a status pill. Darkened, they clear 4.5:1
+   * and take white on a fill.
+   */
+  --pink: #d6246f;
+  --amber: #a06b00;
+  --green: #12904f;
+  --violet: #6f43c9;
+  --coral: #c4471f;
+  --blue: #2a72c9;
+  --red: #c4283a;
+
+  --on-accent: #ffffff;
+
+  --mark-frame: #00000029;
+  --mark-cell: #00000018;
+  --mark-knockout: #ffffff;
+  --mark-knockout-dim: #ffffff59;
 }
 
 *,
@@ -140,8 +171,8 @@ p {
 }
 
 .rail__brand {
-  font: 800 22px/1 var(--font-sans);
-  letter-spacing: -0.04em;
+  display: flex;
+  align-items: center;
   padding-left: 8px;
 }
 

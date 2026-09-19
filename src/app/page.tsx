@@ -15,6 +15,7 @@ import { pageContext } from '@/lib/page-data';
 import { Shell } from '@/components/shell';
 import { ActCard, Art, Chip, SectionHead, Stars, accentStyle } from '@/components/ui';
 import { formatMoneyShort, formatDate } from '@/lib/format';
+import { TAGLINE } from '@/lib/brand';
 import type { EntertainerDetail } from '@/db/repo';
 
 export const dynamic = 'force-dynamic';
@@ -63,9 +64,10 @@ export default async function HomePage() {
     <Shell user={user} current="/" badges={badges}>
       <div className="page">
         <header style={{ marginBottom: 26 }}>
-          <div className="row" style={{ alignItems: 'baseline', marginBottom: 6 }}>
-            <h1 className="display">Book the room, not the paperwork</h1>
-          </div>
+          <h1 className="display" style={{ marginBottom: 8, maxWidth: '16ch' }}>
+            {/* The accent lands on the second half, as in the brand design. */}
+            Great nights start with <span style={{ color: 'var(--accent)' }}>great acts.</span>
+          </h1>
           <p className="lede">
             Live availability, published rates and real portfolios. See what an act costs on your date before you
             send a single message.

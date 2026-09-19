@@ -33,7 +33,7 @@ export function SignInForm() {
         {pending ? 'Signing in…' : 'Sign in'}
       </button>
       <p className="field__hint" style={{ textAlign: 'center' }}>
-        No account yet? <Link href="/signup" style={{ textDecoration: 'underline' }}>Join Encore</Link>
+        No account yet? <Link href="/signup" style={{ textDecoration: 'underline' }}>Join Book the Act</Link>
       </p>
     </form>
   );
@@ -154,8 +154,8 @@ export function SignUpForm({ cities }: { cities: CityRef[] }) {
 
       {role === 'entertainer' ? (
         <p className="field__hint">
-          Entertainers pay a subscription — Encore takes no commission on a booking. You start on a free trial
-          and your profile goes live once Encore has reviewed it.
+          Entertainers pay a subscription — Book the Act takes no commission on a booking. You start on a free trial
+          and your profile goes live once we have reviewed it.
         </p>
       ) : null}
 

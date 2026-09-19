@@ -4,6 +4,8 @@
  * have almost nothing in common beyond messages.
  */
 import Link from 'next/link';
+import { Logo } from '@/components/logo';
+import { BRAND_NAME } from '@/lib/brand';
 import type { SessionUser } from '@/lib/auth';
 
 export interface NavItem {
@@ -71,8 +73,8 @@ export function Shell({
   return (
     <div className="shell">
       <nav className="rail" aria-label="Main">
-        <Link href="/" className="rail__brand">
-          ENCORE
+        <Link href="/" className="rail__brand" aria-label={BRAND_NAME}>
+          <Logo size={18} />
         </Link>
         <div className="rail__nav">
           {items.map((item) => {
@@ -107,7 +109,7 @@ export function Shell({
             </>
           ) : (
             <Link href="/signup" className="btn btn--sm">
-              Join Encore
+              Join Book the Act
             </Link>
           )}
         </div>

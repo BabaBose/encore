@@ -1,4 +1,6 @@
-# Encore
+# Book the Act
+
+**Great nights start with great acts.**
 
 A two-sided marketplace connecting restaurants and hotels with entertainers —
 singers, bands, magicians, instrumentalists, DJs — replacing manual outreach
@@ -12,7 +14,7 @@ availability and price before it sends anything.
 
 ```bash
 npm install
-npm run seed     # builds data/encore.db with a demo marketplace
+npm run seed     # builds data/booktheact.db with a demo marketplace
 npm run dev      # http://localhost:3000
 ```
 
@@ -20,13 +22,34 @@ Sign in with any of these — the password is always `password`:
 
 | Role        | Email                     | Lands on            |
 | ----------- | ------------------------- | ------------------- |
-| Venue       | `penthouse@encore.test`   | Shortlists          |
-| Entertainer | `nadia@encore.test`       | Their workspace     |
-| Agency      | `northline@encore.test`   | Their roster        |
-| Admin       | `admin@encore.test`       | The review queue    |
+| Venue       | `penthouse@booktheact.test`   | Shortlists          |
+| Entertainer | `nadia@booktheact.test`       | Their workspace     |
+| Agency      | `northline@booktheact.test`   | Their roster        |
+| Admin       | `admin@booktheact.test`       | The review queue    |
 
 Other scripts: `npm test` (115 tests), `npm run typecheck`, `npm run build`,
 `npm run reset` (wipe and reseed).
+
+## Brand
+
+The name, tagline and domain live in `src/lib/brand.ts`; nothing hardcodes
+them in copy.
+
+The mark is a three-by-three grid with the centre cell lit in the accent — the
+act in the middle of the room. `src/components/logo.tsx` draws it from the
+ratios in the brand design, so the 24px rail mark and the 72px app tile are the
+same drawing rather than two hand-tuned ones. It has two variants: `outline`
+for the everyday lockup, and `filled` for the app tile and favicon
+(`src/app/icon.svg`, `src/app/apple-icon.svg`).
+
+**Each theme has its own accent palette.** The bright accents are built for a
+near-black canvas and fall to roughly 2.5:1 on warm paper, which fails for the
+small text that carries them — a rate on a card, a match reason. The light
+theme therefore darkens all six and flips text on an accent fill to white. An
+act is stored with a dark-canvas hex, so `resolveAccent` in `src/lib/accents.ts`
+maps it to a CSS token rather than a literal; swapping theme swaps every act's
+tint with it. A test asserts that every seeded accent resolves to a token and
+that both themes define it.
 
 ## How it is put together
 

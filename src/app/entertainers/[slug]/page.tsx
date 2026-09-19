@@ -70,8 +70,8 @@ export default async function ProfilePage({
       <div className="page" style={accentStyle(act.heroAccent)}>
         {!isDiscoverable(act.status) ? (
           <div className="notice" style={{ marginBottom: 18 }}>
-            This profile is <strong>{act.status.replace('_', ' ')}</strong> — only you and Encore can see it.
-            {act.reviewNote ? <> Encore’s note: “{act.reviewNote}”</> : null}
+            This profile is <strong>{act.status.replace('_', ' ')}</strong> — only you and Book the Act can see it.
+            {act.reviewNote ? <> Our note: “{act.reviewNote}”</> : null}
           </div>
         ) : null}
 
@@ -261,7 +261,7 @@ export default async function ProfilePage({
             <section>
               <SectionHead
                 title="Verified reviews"
-                note="From completed bookings on Encore only"
+                note="From completed bookings on Book the Act only"
               />
               {reviews.length ? (
                 <div className="stack" style={{ gap: 12 }}>
@@ -280,7 +280,7 @@ export default async function ProfilePage({
                   ))}
                 </div>
               ) : (
-                <Empty>No verified reviews yet — this act has not completed a booking through Encore.</Empty>
+                <Empty>No verified reviews yet — this act has not completed a booking through Book the Act.</Empty>
               )}
             </section>
 
@@ -288,7 +288,7 @@ export default async function ProfilePage({
               <section>
                 <SectionHead
                   title="References"
-                  note="Added by the act and checked by Encore — not verified bookings"
+                  note="Added by the act and checked by Book the Act — not verified bookings"
                 />
                 <div className="stack" style={{ gap: 12 }}>
                   {references.map((r) => (

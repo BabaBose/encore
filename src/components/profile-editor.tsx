@@ -573,7 +573,7 @@ export function GoLiveChecklist({
         </span>
       </div>
       <div className="panel__body stack" style={{ gap: 14 }}>
-        {reviewNote ? <div className="notice">Encore’s note: “{reviewNote}”</div> : null}
+        {reviewNote ? <div className="notice">Our note: “{reviewNote}”</div> : null}
 
         <ul className="stack" style={{ gap: 8, listStyle: 'none', padding: 0, margin: 0 }}>
           {requirements.map((r) => (
@@ -598,7 +598,7 @@ export function GoLiveChecklist({
           </form>
         ) : status === 'pending_review' ? (
           <p className="dim" style={{ fontSize: 12.5 }}>
-            With Encore now. You will get a notification either way.
+            With Book the Act now. You will get a notification either way.
           </p>
         ) : status === 'live' ? (
           <Link className="btn btn--block" href={`/entertainers/${slug}`}>
@@ -606,7 +606,7 @@ export function GoLiveChecklist({
           </Link>
         ) : (
           <p className="dim" style={{ fontSize: 12.5 }}>
-            Suspended — contact Encore to have this looked at again.
+            Suspended — contact us to have this looked at again.
           </p>
         )}
       </div>

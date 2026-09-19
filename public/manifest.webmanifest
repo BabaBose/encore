@@ -1,0 +1,10 @@
+{
+  "name": "Book the Act",
+  "short_name": "Book the Act",
+  "description": "Great nights start with great acts.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#131315",
+  "theme_color": "#ff5fa2",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
