@@ -15,7 +15,8 @@ import { pageContext } from '@/lib/page-data';
 import { Shell } from '@/components/shell';
 import { ActCard, Art, Chip, SectionHead, Stars, accentStyle } from '@/components/ui';
 import { formatMoneyShort, formatDate } from '@/lib/format';
-import { TAGLINE } from '@/lib/brand';
+import { HeroImage } from '@/components/hero-image';
+import { HowItWorks } from '@/components/how-it-works';
 import type { EntertainerDetail } from '@/db/repo';
 
 export const dynamic = 'force-dynamic';
@@ -66,7 +67,7 @@ export default async function HomePage() {
   return (
     <Shell user={user} current="/" badges={badges}>
       <div className="page">
-        <header style={{ marginBottom: 26 }}>
+        <header style={{ marginBottom: 20 }}>
           <h1 className="display" style={{ marginBottom: 8, maxWidth: '16ch' }}>
             {/* The accent lands on the second half, as in the brand design. */}
             Great nights start with <span style={{ color: 'var(--accent)' }}>great acts.</span>
@@ -77,9 +78,13 @@ export default async function HomePage() {
           </p>
         </header>
 
+        <div style={{ marginBottom: 36 }}>
+          <HeroImage />
+        </div>
+
         {hero ? (
           <Link href={`/entertainers/${hero.slug}`} style={{ display: 'block', marginBottom: 34 }}>
-            <Art accent={hero.heroAccent} className="hero">
+            <Art accent={hero.heroAccent} className="hero" style={{ minHeight: 210 }}>
               <span className="pill pill--accent" style={{ alignSelf: 'flex-start' }}>
                 Featured this week
               </span>
@@ -147,7 +152,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section>
+        <section style={{ marginBottom: 40 }}>
           <SectionHead title="Browse by category" />
           <div className="grid grid--cards">
             {categories.map((cat, i) => {
@@ -175,6 +180,8 @@ export default async function HomePage() {
             })}
           </div>
         </section>
+
+        <HowItWorks />
       </div>
     </Shell>
   );

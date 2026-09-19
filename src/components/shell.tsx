@@ -19,6 +19,7 @@ export function navFor(user: SessionUser | null): NavItem[] {
     return [
       { href: '/', label: 'Discover' },
       { href: '/search', label: 'Search' },
+      { href: '/#how-it-works', label: 'How it works' },
       { href: '/signin', label: 'Sign in' },
     ];
   }

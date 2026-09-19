@@ -5,11 +5,15 @@ import { useEffect, useState } from 'react';
 const KEY = 'booktheact-theme';
 
 /**
- * Applied before paint so a light-theme visitor never sees a dark flash. It has
- * to be inline for that reason — a module would arrive too late.
+ * Applied before paint, so a returning visitor never sees the wrong theme
+ * flash. It has to be inline for that reason — a module would arrive too late.
+ *
+ * Dark is the default. The design was drawn on a dark canvas and the light
+ * theme is the alternate, so the system preference does not get a vote until
+ * someone picks a theme here; after that their choice is what sticks.
  */
 export function ThemeScript() {
-  const script = `(function(){try{var t=localStorage.getItem('${KEY}');if(!t){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}document.documentElement.dataset.theme=t;}catch(e){}})();`;
+  const script = `(function(){try{var t=localStorage.getItem('${KEY}');document.documentElement.dataset.theme=(t==='light'||t==='dark')?t:'dark';}catch(e){document.documentElement.dataset.theme='dark';}})();`;
   return <script dangerouslySetInnerHTML={{ __html: script }} />;
 }
 
