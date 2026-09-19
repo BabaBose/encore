@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "npm run seed && next build",
     "start": "next start",
     "seed": "tsx scripts/seed.ts",
     "reset": "rm -f data/booktheact.db && npm run seed",
