@@ -8,7 +8,7 @@
  *
  * Pass `--force-seed` to reload the demo data deliberately.
  */
-import { createPgSql, migrate } from '../src/db/client';
+import { createPgSql, migrate, MissingDatabaseUrlError } from '../src/db/client';
 import { seedDatabase } from './seed';
 
 async function main(): Promise<void> {
@@ -32,6 +32,24 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
+  // A build log is the wrong place to read a stack trace to work out that an
+  // environment variable is missing.
+  if (err instanceof MissingDatabaseUrlError) {
+    console.error(
+      [
+        '',
+        'No database configured, so the schema could not be applied.',
+        '',
+        'Set DATABASE_URL on this deployment to the Supabase connection string:',
+        '  Supabase → Project Settings → Database → Connection string → Transaction pooler',
+        '  (port 6543, which is the one suited to serverless), with the password filled in.',
+        '',
+        'Then add it in Vercel → Project → Settings → Environment Variables and redeploy.',
+        '',
+      ].join('\n'),
+    );
+    process.exit(1);
+  }
   console.error(err);
   process.exit(1);
 });
