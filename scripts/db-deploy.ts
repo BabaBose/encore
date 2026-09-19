@@ -9,6 +9,7 @@
  * Pass `--force-seed` to reload the demo data deliberately.
  */
 import {
+  connectionStringProblem,
   createPgSql,
   databaseUrl,
   describeConnection,
@@ -21,9 +22,30 @@ import { seedDatabase } from './seed';
 async function main(): Promise<void> {
   const force = process.argv.includes('--force-seed');
 
+  const url = databaseUrl();
+
+  // Check the string itself before trying to use it: a bad paste otherwise
+  // surfaces as a driver error that says nothing about what to fix.
+  const problem = connectionStringProblem(url);
+  if (problem) {
+    console.error(
+      [
+        '',
+        'The database connection string is not usable:',
+        `  ${problem}`,
+        '',
+        `It came from ${process.env.DATABASE_URL ? 'DATABASE_URL' : 'POSTGRES_URL'}.`,
+        'Expected shape (one line, no quotes, no spaces):',
+        '  postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres',
+        '',
+      ].join('\n'),
+    );
+    process.exit(1);
+  }
+
   // Say where we are connecting before trying, so a failure in a build log is
   // readable without guessing which of several URLs was picked up.
-  const { host, port } = describeConnection(databaseUrl());
+  const { host, port } = describeConnection(url);
   console.log(`Connecting to ${host}:${port}`);
   if (isSupabaseDirectHost(host)) {
     console.warn(

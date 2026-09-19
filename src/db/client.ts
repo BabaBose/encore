@@ -49,6 +49,42 @@ export function databaseUrl(): string {
   return url;
 }
 
+/**
+ * What is wrong with a connection string, in words, without ever printing it.
+ *
+ * A pasted connection string goes wrong in a handful of predictable ways, and
+ * the resulting failure — `invalid_url`, or a driver throwing deep in a build
+ * log — says nothing about which. Returns null when the string looks usable.
+ */
+export function connectionStringProblem(url: string): string | null {
+  if (!url.trim()) return 'it is empty';
+
+  if (/\[?YOUR[-_]PASSWORD\]?/i.test(url)) {
+    return 'it still contains the [YOUR-PASSWORD] placeholder. Replace that — square brackets included — with the actual database password.';
+  }
+  if (/^psql\s/i.test(url.trim()) || url.trim().startsWith('"')) {
+    return 'it looks like a whole psql command rather than the URL. Copy only the postgresql://… part, with no surrounding quotes.';
+  }
+  if (/\s/.test(url.trim())) {
+    return 'it contains a space or a line break, which usually means extra text was picked up when copying.';
+  }
+  if (!/^postgres(ql)?:\/\//.test(url)) {
+    return 'it does not start with postgresql://';
+  }
+
+  try {
+    const parsed = new URL(url);
+    if (!parsed.hostname) return 'it has no host.';
+  } catch {
+    return (
+      'it is not a valid URL. The usual cause is a password containing one of ' +
+      '@ : / ? # [ ] — those have to be percent-encoded (@ becomes %40). ' +
+      'Resetting the database password to letters and digits avoids the problem entirely.'
+    );
+  }
+  return null;
+}
+
 /** Host and port of a connection string, with the credentials left out. */
 export function describeConnection(url: string = databaseUrl()): { host: string; port: string } {
   try {
