@@ -18,6 +18,7 @@ import {
   MissingDatabaseUrlError,
 } from '../src/db/client';
 import { seedDatabase } from './seed';
+import { reportDeployProblem } from './report-deploy-problem';
 
 async function main(): Promise<void> {
   const force = process.argv.includes('--force-seed');
@@ -28,6 +29,7 @@ async function main(): Promise<void> {
   // surfaces as a driver error that says nothing about what to fix.
   const problem = connectionStringProblem(url);
   if (problem) {
+    await reportDeployProblem({ step: 'validate-connection-string', problem });
     console.error(
       [
         '',
@@ -57,7 +59,20 @@ async function main(): Promise<void> {
 
   const db = createPgSql();
 
-  await migrate(db);
+  try {
+    await migrate(db);
+  } catch (err) {
+    const e = err as NodeJS.ErrnoException & { name?: string };
+    await reportDeployProblem({
+      step: 'apply-schema',
+      host,
+      port,
+      errorName: e?.name,
+      errorCode: e?.code,
+      errorMessage: e?.message,
+    });
+    throw err;
+  }
   console.log('Schema applied.');
 
   const { rows } = await db.query<{ n: string }>('SELECT COUNT(*) AS n FROM users');
