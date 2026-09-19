@@ -21,10 +21,18 @@ export interface MoneyView {
   currency: string;
   chosen: boolean;
   country: string | null;
+  /** How this currency was arrived at, so the picker can say. */
+  source?: 'chosen' | 'geo' | 'language' | 'default';
   fx: FxTable | null;
 }
 
-const MoneyContext = createContext<MoneyView>({ currency: 'AED', chosen: false, country: null, fx: null });
+const MoneyContext = createContext<MoneyView>({
+  currency: 'AED',
+  chosen: false,
+  country: null,
+  source: 'default',
+  fx: null,
+});
 
 export function MoneyProvider({ value, children }: { value: MoneyView; children: React.ReactNode }) {
   return <MoneyContext.Provider value={value}>{children}</MoneyContext.Provider>;
@@ -74,6 +82,22 @@ export function Price({
   );
 }
 
+/** Answers "why is it showing me this?" without anyone having to ask. */
+function whyThisCurrency(view: MoneyView): string {
+  const name = CURRENCIES[view.currency]?.name ?? view.currency;
+  const where = view.country ? ` (${view.country})` : '';
+  switch (view.source) {
+    case 'chosen':
+      return `Showing ${name} because you picked it. Change it here.`;
+    case 'geo':
+      return `Showing ${name}, from where you appear to be browsing${where}. Change it here.`;
+    case 'language':
+      return `Showing ${name}, from your browser's language${where}. Change it here.`;
+    default:
+      return `Showing ${name}, the marketplace default — we could not tell where you are. Change it here.`;
+  }
+}
+
 function approxNote(from: string, to: string, fx: FxTable | null): string {
   const name = CURRENCIES[to]?.name ?? to;
   const when = fx ? ` Rates as of ${fx.asOf}.` : '';
@@ -97,6 +121,7 @@ export function CurrencyPicker({ compact = false }: { compact?: boolean }) {
         className="currency-picker__select"
         value={view.currency}
         disabled={pending}
+        title={whyThisCurrency(view)}
         aria-label="Show prices in"
         onChange={(e) => {
           const next = e.target.value;

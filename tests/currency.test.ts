@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CURRENCIES,
   convert,
   currencyForCountry,
   formatAmount,
   knownCurrency,
+  parseAmount,
   priceIn,
   roundForDisplay,
   type FxTable,
@@ -151,6 +153,62 @@ describe('the built-in rate table', () => {
     const { CURRENCIES } = await import('@/domain/currency');
     for (const code of Object.keys(BUILT_IN_FX.rates)) {
       expect(CURRENCIES[code], `no metadata for ${code}`).toBeTruthy();
+    }
+  });
+});
+
+describe('reading an amount someone typed', () => {
+  it('handles a plain number', () => {
+    expect(parseAmount('350', 'AED')).toBe(35000);
+    expect(parseAmount('350.50', 'AED')).toBe(35050);
+  });
+
+  it('respects a currency with no minor units', () => {
+    // ¥14,000 is 14000 minor units, not 1,400,000.
+    expect(parseAmount('14000', 'JPY')).toBe(14000);
+    expect(parseAmount('14,000', 'JPY')).toBe(14000);
+  });
+
+  it('reads a European decimal comma', () => {
+    expect(parseAmount('1.234,56', 'EUR')).toBe(123456);
+    expect(parseAmount('350,50', 'EUR')).toBe(35050);
+  });
+
+  it('reads an English decimal point with grouping', () => {
+    expect(parseAmount('1,234.56', 'USD')).toBe(123456);
+  });
+
+  it('treats three trailing digits as grouping in either convention', () => {
+    expect(parseAmount('1,500', 'USD')).toBe(150000);
+    expect(parseAmount('1.500', 'EUR')).toBe(150000);
+  });
+
+  it('ignores a currency symbol or stray text', () => {
+    expect(parseAmount('€ 350', 'EUR')).toBe(35000);
+    expect(parseAmount('AED 350', 'AED')).toBe(35000);
+  });
+
+  it('gives zero for nothing usable', () => {
+    expect(parseAmount('', 'EUR')).toBe(0);
+    expect(parseAmount('abc', 'EUR')).toBe(0);
+  });
+
+  it('round-trips what the budget field puts back into it', () => {
+    for (const [minor, code] of [[35000, 'AED'], [12345, 'EUR'], [14000, 'JPY'], [99, 'USD']] as const) {
+      const units = CURRENCIES[code].minorUnits;
+      expect(parseAmount(String(minor / 10 ** units), code)).toBe(minor);
+    }
+  });
+});
+
+describe('country coverage', () => {
+  it('maps every European country to a currency it can convert', () => {
+    const EUROPE = ('AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES ' +
+      'SE GB CH NO IS LI RS UA BA AL MK ME MD TR GE AM AZ SM VA XK FO GI MC AD JE GG IM').split(' ');
+    for (const country of EUROPE) {
+      const code = currencyForCountry(country);
+      expect(code, `${country} has no currency`).toBeTruthy();
+      expect(BUILT_IN_FX.rates[code!], `${country} -> ${code} has no rate`).toBeGreaterThan(0);
     }
   });
 });

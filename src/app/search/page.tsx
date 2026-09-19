@@ -15,7 +15,16 @@ import { CONTRACT_LENGTHS, type ContractLength, type GigType, type TopCategory }
 import { pageContext } from '@/lib/page-data';
 import { Shell } from '@/components/shell';
 import { ActCard, Chip, Empty } from '@/components/ui';
-import { formatDateShort, parseMoney } from '@/lib/format';
+import { formatDateShort } from '@/lib/format';
+import {
+  BASE_CURRENCY,
+  CURRENCIES,
+  convert,
+  formatAmount,
+  knownCurrency,
+  parseAmount,
+  type FxTable,
+} from '@/domain/currency';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +40,7 @@ const one = (p: Params, key: string): string | null => {
  * Read the query out of the URL, dropping anything malformed rather than
  * failing the page — a hand-edited URL should degrade to a broader search.
  */
-function readQuery(p: Params): SearchQuery {
+function readQuery(p: Params, fx: FxTable | null): SearchQuery {
   const gigType: GigType = one(p, 'gigType') === 'long_term' ? 'long_term' : 'one_time';
   const date = one(p, 'date');
   const dateEnd = one(p, 'dateEnd');
@@ -39,6 +48,19 @@ function readQuery(p: Params): SearchQuery {
   const monthsRaw = Number(one(p, 'months'));
   const months = CONTRACT_LENGTHS.includes(monthsRaw as ContractLength) ? (monthsRaw as ContractLength) : null;
   const budget = one(p, 'budgetMax');
+  /*
+   * The ceiling is typed in whatever currency the visitor is being shown, and
+   * the form says which alongside it. Rates are stored in the listing currency,
+   * so it is converted here rather than compared as if the number were dirhams
+   * — which is what used to happen, and meant a ceiling of 100 typed by someone
+   * seeing euros filtered at AED 100, about a quarter of what they meant.
+   */
+  const budgetCurrency = knownCurrency(one(p, 'budgetCurrency')) ?? BASE_CURRENCY;
+  const budgetMinor = budget ? parseAmount(budget, budgetCurrency) : null;
+  const budgetInBase =
+    budgetMinor == null || !fx
+      ? budgetMinor
+      : convert(budgetMinor, budgetCurrency, BASE_CURRENCY, fx) ?? budgetMinor;
 
   return {
     gigType,
@@ -51,7 +73,7 @@ function readQuery(p: Params): SearchQuery {
     timeBlock: (one(p, 'timeBlock') as SearchQuery['timeBlock']) ?? null,
     months,
     startDate: startDate && isIsoDate(startDate) ? startDate : null,
-    budgetMax: budget ? parseMoney(budget) : null,
+    budgetMax: budgetInBase,
     minRating: one(p, 'minRating') ? Number(one(p, 'minRating')) : null,
     verifiedOnly: one(p, 'verified') === '1',
     sort: (one(p, 'sort') as SortKey | null) ?? undefined,
@@ -60,7 +82,22 @@ function readQuery(p: Params): SearchQuery {
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams;
-  const query = readQuery(params);
+  const { user, badges, money } = await pageContext();
+  const query = readQuery(params, money.fx);
+  // What the budget field shows and accepts: the visitor's own currency.
+  const budgetCurrency = knownCurrency(one(params, 'budgetCurrency')) ?? money.currency;
+  /*
+   * A plain number, not a formatted one: this is an input's value and it has to
+   * survive being read back by `parseAmount`. A Czech-formatted "1 234,56" comes
+   * back as 123456 once the separators are stripped.
+   */
+  const budgetShown =
+    query.budgetMax == null
+      ? ''
+      : String(
+          ((money.fx ? convert(query.budgetMax, BASE_CURRENCY, budgetCurrency, money.fx) : null) ??
+            query.budgetMax) / 10 ** (CURRENCIES[budgetCurrency]?.minorUnits ?? 2),
+        );
   // What the collapsed panel reports on a phone: how many filters are doing
   // something. Gig type always has a value, so it is not a narrowing.
   const activeFilters = [
@@ -77,7 +114,6 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     query.minRating,
     query.verifiedOnly || null,
   ].filter(Boolean).length;
-  const { user, badges, money } = await pageContext();
 
   const db = getDb();
   const cities = await repo.listCities(db);
@@ -266,16 +302,23 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
             <div className="field">
               <label className="field__label" htmlFor="budgetMax">
-                Budget ceiling ({longTerm ? 'per month' : 'per hour'})
+                Budget ceiling ({longTerm ? 'per month' : 'per hour'}) in {budgetCurrency}
               </label>
               <input
                 className="input"
                 id="budgetMax"
                 name="budgetMax"
                 inputMode="decimal"
-                placeholder="AED"
-                defaultValue={query.budgetMax ? String(query.budgetMax / 100) : ''}
+                placeholder={budgetCurrency}
+                defaultValue={budgetShown}
               />
+              {/* Travels with the number so the server knows what it meant. */}
+              <input type="hidden" name="budgetCurrency" value={budgetCurrency} />
+              {budgetCurrency !== BASE_CURRENCY && query.budgetMax != null ? (
+                <div className="field__hint">
+                  Matched against listing rates as {formatAmount(query.budgetMax, BASE_CURRENCY)}
+                </div>
+              ) : null}
             </div>
 
             <div className="field">

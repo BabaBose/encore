@@ -63,6 +63,36 @@ export const CURRENCIES: Record<string, Currency> = {
   NOK: { code: 'NOK', symbol: 'kr', name: 'Norwegian krone', minorUnits: 2, locale: 'nb-NO' },
   DKK: { code: 'DKK', symbol: 'kr', name: 'Danish krone', minorUnits: 2, locale: 'da-DK' },
   PLN: { code: 'PLN', symbol: 'zł', name: 'Polish złoty', minorUnits: 2, locale: 'pl-PL' },
+  CZK: { code: 'CZK', symbol: 'Kč', name: 'Czech koruna', minorUnits: 2, locale: 'cs-CZ' },
+  HUF: { code: 'HUF', symbol: 'Ft', name: 'Hungarian forint', minorUnits: 2, locale: 'hu-HU' },
+  RON: { code: 'RON', symbol: 'lei', name: 'Romanian leu', minorUnits: 2, locale: 'ro-RO' },
+  BGN: { code: 'BGN', symbol: 'лв', name: 'Bulgarian lev', minorUnits: 2, locale: 'bg-BG' },
+  ISK: { code: 'ISK', symbol: 'kr', name: 'Icelandic króna', minorUnits: 0, locale: 'is-IS' },
+  UAH: { code: 'UAH', symbol: '₴', name: 'Ukrainian hryvnia', minorUnits: 2, locale: 'uk-UA' },
+  RSD: { code: 'RSD', symbol: 'RSD', name: 'Serbian dinar', minorUnits: 2, locale: 'sr-RS' },
+  BAM: { code: 'BAM', symbol: 'KM', name: 'Bosnian mark', minorUnits: 2, locale: 'bs-BA' },
+  ALL: { code: 'ALL', symbol: 'L', name: 'Albanian lek', minorUnits: 2, locale: 'sq-AL' },
+  MKD: { code: 'MKD', symbol: 'ден', name: 'Macedonian denar', minorUnits: 2, locale: 'mk-MK' },
+  MDL: { code: 'MDL', symbol: 'L', name: 'Moldovan leu', minorUnits: 2, locale: 'ro-MD' },
+  GEL: { code: 'GEL', symbol: '₾', name: 'Georgian lari', minorUnits: 2, locale: 'ka-GE' },
+  AMD: { code: 'AMD', symbol: '֏', name: 'Armenian dram', minorUnits: 2, locale: 'hy-AM' },
+  AZN: { code: 'AZN', symbol: '₼', name: 'Azerbaijani manat', minorUnits: 2, locale: 'az-AZ' },
+  ILS: { code: 'ILS', symbol: '₪', name: 'Israeli shekel', minorUnits: 2, locale: 'he-IL' },
+  VND: { code: 'VND', symbol: '₫', name: 'Vietnamese dong', minorUnits: 0, locale: 'vi-VN' },
+  BDT: { code: 'BDT', symbol: '৳', name: 'Bangladeshi taka', minorUnits: 2, locale: 'bn-BD' },
+  LKR: { code: 'LKR', symbol: 'Rs', name: 'Sri Lankan rupee', minorUnits: 2, locale: 'si-LK' },
+  NPR: { code: 'NPR', symbol: 'Rs', name: 'Nepalese rupee', minorUnits: 2, locale: 'ne-NP' },
+  TWD: { code: 'TWD', symbol: 'NT$', name: 'New Taiwan dollar', minorUnits: 2, locale: 'zh-TW' },
+  GHS: { code: 'GHS', symbol: 'GH₵', name: 'Ghanaian cedi', minorUnits: 2, locale: 'en-GH' },
+  TZS: { code: 'TZS', symbol: 'TSh', name: 'Tanzanian shilling', minorUnits: 2, locale: 'en-TZ' },
+  UGX: { code: 'UGX', symbol: 'USh', name: 'Ugandan shilling', minorUnits: 0, locale: 'en-UG' },
+  DZD: { code: 'DZD', symbol: 'DA', name: 'Algerian dinar', minorUnits: 2, locale: 'fr-DZ' },
+  TND: { code: 'TND', symbol: 'DT', name: 'Tunisian dinar', minorUnits: 2, locale: 'fr-TN' },
+  IQD: { code: 'IQD', symbol: 'IQD', name: 'Iraqi dinar', minorUnits: 2, locale: 'ar-IQ' },
+  CLP: { code: 'CLP', symbol: 'CLP$', name: 'Chilean peso', minorUnits: 0, locale: 'es-CL' },
+  COP: { code: 'COP', symbol: 'COL$', name: 'Colombian peso', minorUnits: 2, locale: 'es-CO' },
+  ARS: { code: 'ARS', symbol: 'ARS$', name: 'Argentine peso', minorUnits: 2, locale: 'es-AR' },
+  PEN: { code: 'PEN', symbol: 'S/', name: 'Peruvian sol', minorUnits: 2, locale: 'es-PE' },
 };
 
 /** The marketplace's home currency: what a listing defaults to. */
@@ -71,20 +101,46 @@ export const BASE_CURRENCY = 'AED';
 /**
  * Country to currency. The euro members are spelled out rather than inferred,
  * because "in the EU" and "uses the euro" are not the same set.
+ *
+ * Europe is covered end to end on purpose. A country missing from here falls
+ * all the way back to the marketplace default, and a visitor in Prague being
+ * shown dirhams is exactly the bug that adding these fixes.
  */
 export const COUNTRY_CURRENCY: Record<string, string> = {
+  // Gulf and the wider Middle East
   AE: 'AED', SA: 'SAR', QA: 'QAR', KW: 'KWD', BH: 'BHD', OM: 'OMR',
-  US: 'USD', PR: 'USD', EC: 'USD', PA: 'USD', SV: 'USD',
-  GB: 'GBP', JE: 'GBP', GG: 'GBP', IM: 'GBP',
+  JO: 'JOD', LB: 'LBP', IL: 'ILS', IQ: 'IQD',
+
+  // Euro area, and the microstates and territories that use the euro
   AT: 'EUR', BE: 'EUR', CY: 'EUR', EE: 'EUR', FI: 'EUR', FR: 'EUR', DE: 'EUR',
   GR: 'EUR', IE: 'EUR', IT: 'EUR', LV: 'EUR', LT: 'EUR', LU: 'EUR', MT: 'EUR',
-  NL: 'EUR', PT: 'EUR', SK: 'EUR', SI: 'EUR', ES: 'EUR', HR: 'EUR', MC: 'EUR', AD: 'EUR',
+  NL: 'EUR', PT: 'EUR', SK: 'EUR', SI: 'EUR', ES: 'EUR', HR: 'EUR',
+  MC: 'EUR', AD: 'EUR', SM: 'EUR', VA: 'EUR', ME: 'EUR', XK: 'EUR',
+  AX: 'EUR', BL: 'EUR', GF: 'EUR', GP: 'EUR', MQ: 'EUR', YT: 'EUR', RE: 'EUR',
+
+  // The rest of Europe, each on its own currency
+  GB: 'GBP', JE: 'GBP', GG: 'GBP', IM: 'GBP', GI: 'GBP',
   CH: 'CHF', LI: 'CHF',
-  IN: 'INR', PK: 'PKR', EG: 'EGP', ZA: 'ZAR', TR: 'TRY', RU: 'RUB',
-  CN: 'CNY', JP: 'JPY', KR: 'KRW', SG: 'SGD', HK: 'HKD',
-  AU: 'AUD', NZ: 'NZD', CA: 'CAD', TH: 'THB', MY: 'MYR', ID: 'IDR', PH: 'PHP',
-  BR: 'BRL', MX: 'MXN', NG: 'NGN', KE: 'KES', MA: 'MAD', JO: 'JOD', LB: 'LBP',
-  SE: 'SEK', NO: 'NOK', DK: 'DKK', PL: 'PLN',
+  SE: 'SEK', NO: 'NOK', SJ: 'NOK', DK: 'DKK', FO: 'DKK', GL: 'DKK',
+  PL: 'PLN', CZ: 'CZK', HU: 'HUF', RO: 'RON', BG: 'BGN', IS: 'ISK',
+  UA: 'UAH', RS: 'RSD', BA: 'BAM', AL: 'ALL', MK: 'MKD', MD: 'MDL',
+  BY: 'RUB', RU: 'RUB', TR: 'TRY', GE: 'GEL', AM: 'AMD', AZ: 'AZN',
+
+  // The Americas
+  US: 'USD', PR: 'USD', VI: 'USD', GU: 'USD', AS: 'USD',
+  EC: 'USD', PA: 'USD', SV: 'USD', TC: 'USD', BQ: 'USD',
+  CA: 'CAD', MX: 'MXN', BR: 'BRL', CL: 'CLP', CO: 'COP', AR: 'ARS', PE: 'PEN',
+
+  // Asia and the Pacific
+  IN: 'INR', PK: 'PKR', BD: 'BDT', LK: 'LKR', NP: 'NPR',
+  CN: 'CNY', JP: 'JPY', KR: 'KRW', TW: 'TWD', HK: 'HKD', MO: 'HKD',
+  SG: 'SGD', MY: 'MYR', ID: 'IDR', PH: 'PHP', TH: 'THB', VN: 'VND',
+  AU: 'AUD', NZ: 'NZD', CK: 'NZD', NU: 'NZD',
+
+  // Africa
+  EG: 'EGP', ZA: 'ZAR', LS: 'ZAR', NA: 'ZAR', SZ: 'ZAR',
+  NG: 'NGN', KE: 'KES', GH: 'GHS', TZ: 'TZS', UG: 'UGX',
+  MA: 'MAD', EH: 'MAD', DZ: 'DZD', TN: 'TND',
 };
 
 /**
@@ -218,4 +274,40 @@ export function priceIn(
     approx: formatAmount(roundForDisplay(converted, to), to, options),
     approxCurrency: to,
   };
+}
+
+/**
+ * Reads an amount a person typed, in a given currency, into minor units.
+ *
+ * Two things `parseMoney` gets wrong once prices are not all dirhams. It
+ * assumes every currency divides by a hundred, which turns ¥14,000 into
+ * ¥140,000; and it strips commas, which turns a European's "1.234,56" into
+ * 123,456. So the separators are worked out rather than deleted: whichever of
+ * `.` or `,` comes last, with one or two digits after it and none before the
+ * other, is the decimal point — everything else is grouping.
+ */
+export function parseAmount(input: string, currency: string): number {
+  const units = CURRENCIES[currency]?.minorUnits ?? 2;
+  const cleaned = input.replace(/[^0-9.,]/g, '');
+  if (!cleaned) return 0;
+
+  const lastDot = cleaned.lastIndexOf('.');
+  const lastComma = cleaned.lastIndexOf(',');
+  const decimalAt = Math.max(lastDot, lastComma);
+
+  let whole = cleaned;
+  let fraction = '';
+  if (decimalAt !== -1) {
+    const after = cleaned.slice(decimalAt + 1);
+    // Three digits after the last separator is grouping — "1,500" is fifteen
+    // hundred in both conventions, not one and a half.
+    if (/^\d{1,2}$/.test(after)) {
+      whole = cleaned.slice(0, decimalAt);
+      fraction = after;
+    }
+  }
+
+  const digits = whole.replace(/[.,]/g, '');
+  const major = Number.parseFloat(`${digits || '0'}.${fraction || '0'}`);
+  return Number.isFinite(major) ? Math.round(major * 10 ** units) : 0;
 }
