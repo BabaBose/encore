@@ -1,0 +1,30 @@
+{
+  "name": "encore",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Encore — a two-sided marketplace connecting venues with entertainers.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "seed": "node --experimental-strip-types scripts/seed.ts",
+    "reset": "rm -f data/encore.db && npm run seed",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "next": "^15.5.25",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.6.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  }
+}
