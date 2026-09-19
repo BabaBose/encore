@@ -2,12 +2,12 @@
   "name": "encore",
   "version": "0.1.0",
   "private": true,
-  "description": "Encore — a two-sided marketplace connecting venues with entertainers.",
+  "description": "Encore \u2014 a two-sided marketplace connecting venues with entertainers.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "seed": "node --experimental-strip-types scripts/seed.ts",
+    "seed": "tsx scripts/seed.ts",
     "reset": "rm -f data/encore.db && npm run seed",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -24,6 +24,7 @@
     "@types/node": "^26.6.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "tsx": "^4.23.13",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1"
   }
