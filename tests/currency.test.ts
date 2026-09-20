@@ -99,32 +99,43 @@ describe('rounding for display', () => {
 });
 
 describe('what a price shows', () => {
-  it('shows only the listing currency when it is the visitor’s too', () => {
+  it('shows the listing currency when it is the visitor’s too', () => {
     const p = priceIn(35000, 'AED', 'AED', fx);
-    expect(p.exact).toBe('AED 350');
-    expect(p.approx).toBeNull();
+    expect(p.text).toBe('AED 350');
+    expect(p.converted).toBe(false);
+    expect(p.currency).toBe('AED');
   });
 
-  it('adds a rounded approximation for a visitor elsewhere', () => {
+  it('shows only the visitor’s currency, rounded, when it differs', () => {
     const p = priceIn(35000, 'AED', 'GBP', fx);
-    expect(p.exact).toBe('AED 350');
-    expect(p.approx).toBe('£88'); // 87.50, to the nearest whole pound
-    expect(p.approxCurrency).toBe('GBP');
+    expect(p.text).toBe('£88'); // 87.50, to the nearest whole pound
+    expect(p.currency).toBe('GBP');
+    expect(p.converted).toBe(true);
   });
 
-  it('shows the listing price alone when there is no rate', () => {
+  it('keeps the listing figure available for a tooltip and for anything binding', () => {
+    const p = priceIn(35000, 'AED', 'GBP', fx);
+    expect(p.listing).toBe('AED 350');
+    expect(p.listingCurrency).toBe('AED');
+  });
+
+  it('falls back to the listing figure when there is no rate', () => {
     const p = priceIn(35000, 'AED', 'KRW', fx);
-    expect(p.exact).toBe('AED 350');
-    expect(p.approx).toBeNull();
+    expect(p.text).toBe('AED 350');
+    expect(p.converted).toBe(false);
   });
 
-  it('shows the listing price alone when we have no table at all', () => {
-    expect(priceIn(35000, 'AED', 'GBP', null).approx).toBeNull();
+  it('falls back to the listing figure when we have no table at all', () => {
+    const p = priceIn(35000, 'AED', 'GBP', null);
+    expect(p.text).toBe('AED 350');
+    expect(p.converted).toBe(false);
   });
 
-  it('never drops the listing currency, whatever the visitor uses', () => {
-    for (const to of ['AED', 'GBP', 'JPY', 'KRW', 'nonsense']) {
-      expect(priceIn(35000, 'AED', to, fx).exact).toBe('AED 350');
+  it('never invents a number — an unconvertible price shows the real one', () => {
+    for (const to of ['KRW', 'nonsense', '']) {
+      const p = priceIn(35000, 'AED', to, fx);
+      expect(p.text).toBe('AED 350');
+      expect(p.listing).toBe('AED 350');
     }
   });
 });
@@ -210,5 +221,44 @@ describe('country coverage', () => {
       expect(code, `${country} has no currency`).toBeTruthy();
       expect(BUILT_IN_FX.rates[code!], `${country} -> ${code} has no rate`).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('money a person types is read in the currency they were shown', () => {
+  /** What `readOffer` in the actions does, stated as the rule it has to keep. */
+  const asListingCurrency = (typed: string, typedIn: string, listing: string) => {
+    const minor = parseAmount(typed, typedIn);
+    if (typedIn === listing) return minor;
+    const converted = convert(minor, typedIn, listing, fx);
+    if (converted == null) throw new Error('unconvertible');
+    return converted;
+  };
+
+  it('converts an offer typed in the visitor’s currency into the act’s', () => {
+    // £100 offered against an AED listing is AED 400, not AED 100.
+    expect(asListingCurrency('100', 'GBP', 'AED')).toBe(40000);
+  });
+
+  it('leaves an offer alone when the two already match', () => {
+    expect(asListingCurrency('950', 'AED', 'AED')).toBe(95000);
+  });
+
+  it('refuses rather than mangles an offer it cannot convert', () => {
+    /*
+     * There is no KRW rate here. Taking the number at face value would be a
+     * silent hundredfold error — KRW has no minor units, so ₩1,000 parses to
+     * 1000 minor units, which read as dirhams is AED 10. The form never sends
+     * a currency it cannot convert, and the server refuses if one arrives.
+     */
+    expect(convert(parseAmount('1000', 'KRW'), 'KRW', 'AED', fx)).toBeNull();
+  });
+
+  it('round-trips what the offer field pre-fills', () => {
+    const listingMinor = 134820; // AED 1,348.20
+    const shown = roundForDisplay(convert(listingMinor, 'AED', 'GBP', fx)!, 'GBP');
+    const typedBack = String(shown / 100);
+    // Back within the rounding step, not exact — the field shows a round number.
+    const returned = asListingCurrency(typedBack, 'GBP', 'AED');
+    expect(Math.abs(returned - listingMinor) / listingMinor).toBeLessThan(0.02);
   });
 });

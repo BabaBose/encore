@@ -15,6 +15,7 @@ import { CONTRACT_LENGTHS, type ContractLength, type GigType, type TopCategory }
 import { pageContext } from '@/lib/page-data';
 import { Shell } from '@/components/shell';
 import { ActCard, Chip, Empty } from '@/components/ui';
+import { CurrencyNote } from '@/components/money';
 import { formatDateShort } from '@/lib/format';
 import {
   BASE_CURRENCY,
@@ -430,6 +431,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                 'Acts who take residency inquiries while already booked appear too, with their committed days shown.'
               : 'One-off matching: acts based in, travelling to, or within travel range of the city, and free on the date.'}
           </p>
+          <CurrencyNote style={{ marginTop: 4 }} />
         </div>
       </div>
     </Shell>

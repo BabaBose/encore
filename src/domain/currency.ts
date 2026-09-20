@@ -243,16 +243,30 @@ export function formatAmount(minor: number, currency: string, options: FormatOpt
 }
 
 /**
- * The whole job in one call: what the listing says, and what that is worth to
- * this visitor. `approx` is null whenever there is nothing useful to add —
- * same currency, or no rate — so a caller renders it or does not.
+ * The whole job in one call: what this price says to this visitor.
+ *
+ * One figure, in the visitor's own currency. Showing two — the listing's and a
+ * conversion beside it — reads as clutter on a card, and the second number is
+ * the one they actually think in. So the conversion happens here and only the
+ * result is rendered.
+ *
+ * What is lost by dropping the other figure is that the act is paid in their
+ * own currency, and that is a real thing to lose, so it does not vanish: the
+ * listing amount stays on the object for a tooltip, `converted` says whether
+ * this is a conversion at all, and a page showing converted prices carries one
+ * note saying so. A caller committing money — an offer, a counter-offer —
+ * should use `listing` rather than `text`.
  */
-export interface PricePair {
-  /** Always the listing's own currency. This is what will be paid. */
-  exact: string;
-  /** Rounded, approximate, in the visitor's currency. Null when not useful. */
-  approx: string | null;
-  approxCurrency: string | null;
+export interface PriceView {
+  /** What to render. The visitor's currency where we can convert to it. */
+  text: string;
+  /** The currency `text` is in. */
+  currency: string;
+  /** False when this is the listing's own figure, unconverted. */
+  converted: boolean;
+  /** The listing's own amount, always, for a tooltip and for anything binding. */
+  listing: string;
+  listingCurrency: string;
 }
 
 export function priceIn(
@@ -261,18 +275,26 @@ export function priceIn(
   visitorCurrency: string | null,
   fx: FxTable | null,
   options: FormatOptions = {},
-): PricePair {
-  const exact = formatAmount(minor, listingCurrency, options);
+): PriceView {
+  const listing = formatAmount(minor, listingCurrency, options);
+  const base = { listing, listingCurrency };
+
   const to = knownCurrency(visitorCurrency);
   if (!to || !fx || to === listingCurrency) {
-    return { exact, approx: null, approxCurrency: null };
+    return { ...base, text: listing, currency: listingCurrency, converted: false };
   }
+
   const converted = convert(minor, listingCurrency, to, fx);
-  if (converted == null) return { exact, approx: null, approxCurrency: null };
+  // No rate is not a licence to guess: fall back to the listing's own figure.
+  if (converted == null) {
+    return { ...base, text: listing, currency: listingCurrency, converted: false };
+  }
+
   return {
-    exact,
-    approx: formatAmount(roundForDisplay(converted, to), to, options),
-    approxCurrency: to,
+    ...base,
+    text: formatAmount(roundForDisplay(converted, to), to, options),
+    currency: to,
+    converted: true,
   };
 }
 

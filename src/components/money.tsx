@@ -14,7 +14,7 @@
  * threaded down to it.
  */
 import { createContext, useContext, useTransition } from 'react';
-import { CURRENCIES, priceIn, type FormatOptions, type FxTable } from '@/domain/currency';
+import { CURRENCIES, priceIn, type FormatOptions, type FxTable, type PriceView } from '@/domain/currency';
 import { setCurrencyAction } from '@/app/actions';
 
 export interface MoneyView {
@@ -51,35 +51,33 @@ export function Price({
   style,
 }: {
   minor: number;
-  /** The listing's currency, not the visitor's. */
+  /** The listing's currency. What the visitor sees may not be this. */
   currency: string;
   short?: boolean;
-  /** "/hr", "/month" — sits with the exact figure, not the approximation. */
+  /** "/hr", "/month" — part of the figure, so it stays on the same line. */
   suffix?: string;
   className?: string;
   style?: React.CSSProperties;
 }) {
   const view = useMoney();
   const options: FormatOptions = { short };
-  const { exact, approx, approxCurrency } = priceIn(minor, currency, view.currency, view.fx, options);
+  const price = priceIn(minor, currency, view.currency, view.fx, options);
 
   return (
-    <span className={className} style={style}>
-      {/* Each figure stays whole: a line may break between them, never inside
-          one, so "AED" never ends up on its own line above its number. */}
-      <span className="price__exact">
-        {exact}
-        {suffix}
-      </span>
-      {approx ? (
-        <span className="price__approx" title={approxNote(currency, approxCurrency!, view.fx)}>
-          {' '}
-          ≈ {approx}
-          {suffix}
-        </span>
-      ) : null}
+    <span
+      className={className}
+      style={style}
+      // The act's own figure stays one hover away rather than on the card.
+      title={price.converted ? listingNote(price) : undefined}
+    >
+      {price.text}
+      {suffix}
     </span>
   );
+}
+
+function listingNote(price: PriceView): string {
+  return `Converted for you. ${price.listing} in the currency this act lists and is paid in.`;
 }
 
 /** Answers "why is it showing me this?" without anyone having to ask. */
@@ -144,14 +142,15 @@ export function CurrencyPicker({ compact = false }: { compact?: boolean }) {
  * The footnote that makes the approximations honest: where the rates came
  * from, when, and that the act is paid in the listing currency.
  */
-export function CurrencyNote() {
+export function CurrencyNote({ style }: { style?: React.CSSProperties }) {
   const view = useMoney();
   if (!view.fx) return null;
+  const name = CURRENCIES[view.currency]?.name ?? view.currency;
   return (
-    <p className="dim" style={{ fontSize: 11.5, marginTop: 10 }}>
-      Prices in {view.currency} are approximate, converted at rates from {view.fx.asOf}
-      {view.fx.source === 'built-in' ? ' (built in)' : ''}. Every booking is agreed and paid in the
-      currency the act lists.
+    <p className="dim" style={{ fontSize: 11.5, marginTop: 10, ...style }}>
+      Prices are shown in {name}, converted at rates from {view.fx.asOf}
+      {view.fx.source === 'built-in' ? ' (built in)' : ''} and rounded. Each act is paid in the
+      currency it lists, which is what a booking is agreed in.
     </p>
   );
 }

@@ -1362,17 +1362,6 @@ a:focus-visible {
  * A converted price is a courtesy, so it is styled as one: lighter, smaller
  * and behind the figure that will actually be paid. It never competes with it.
  */
-.price__exact {
-  white-space: nowrap;
-}
-
-.price__approx {
-  color: var(--ink-dim);
-  font-weight: 500;
-  font-size: 0.86em;
-  white-space: nowrap;
-}
-
 .currency-picker__select {
   appearance: none;
   border: 1px solid var(--line);

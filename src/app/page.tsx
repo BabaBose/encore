@@ -15,7 +15,7 @@ import { pageContext } from '@/lib/page-data';
 import { Shell } from '@/components/shell';
 import { ActCard, Art, Chip, SectionHead, Stars, accentStyle } from '@/components/ui';
 import { formatDate } from '@/lib/format';
-import { Price } from '@/components/money';
+import { CurrencyNote, Price } from '@/components/money';
 import { HeroImage } from '@/components/hero-image';
 import { HowItWorks } from '@/components/how-it-works';
 import type { EntertainerDetail } from '@/db/repo';
@@ -188,6 +188,8 @@ export default async function HomePage() {
         </section>
 
         <HowItWorks />
+
+        <CurrencyNote style={{ marginTop: 28 }} />
       </div>
     </Shell>
   );

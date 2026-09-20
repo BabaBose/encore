@@ -20,7 +20,8 @@ import {
   type ResidencyInquiryPolicy,
   type TimeBlock,
 } from '@/domain/types';
-import { Price } from '@/components/money';
+import { Price, useMoney } from '@/components/money';
+import { CURRENCIES, convert, priceIn, roundForDisplay } from '@/domain/currency';
 import { formatMoney, formatDate } from '@/lib/format';
 import type { CityRef } from '@/domain/search';
 
@@ -53,6 +54,10 @@ export function InquiryPanel(props: InquiryPanelProps) {
     String(props.rateCard.residency?.daysPerWeekIncluded ?? 5),
   );
   const [offerEdited, setOfferEdited] = useState<string | null>(null);
+  const view = useMoney();
+  /** The breakdown is a string, so it formats here rather than through <Price>. */
+  const showMoney = (minor: number, currency: string) =>
+    priceIn(minor, currency, view.currency, view.fx).text;
 
   /** The live quote, resolved through the act's own rate rules. */
   const quote = useMemo(() => {
@@ -79,7 +84,7 @@ export function InquiryPanel(props: InquiryPanelProps) {
         currency: q.currency,
         headlineMinor: q.total,
         headlineSuffix: '',
-        detail: `${q.label} · ${q.billableHours} hr × ${formatMoney(q.hourly, q.currency)}${
+        detail: `${q.label} · ${q.billableHours} hr × ${showMoney(q.hourly, q.currency)}${
           q.minimumApplied ? ` (${q.minimumHours} hr minimum)` : ''
         }`,
         totalMinor: null as number | null,
@@ -130,7 +135,23 @@ export function InquiryPanel(props: InquiryPanelProps) {
     };
   }, [gigType, startDate, endDate, months, props.blocks, props.residencyInquiryPolicy]);
 
-  const offerValue = offerEdited ?? (quote.amount ? String(quote.amount / 100) : '');
+  /*
+   * The offer is typed in whatever currency the venue is browsing in, and the
+   * currency travels with it so the server converts rather than guesses. The
+   * inquiry is still denominated in the act's currency — that is what they are
+   * paid — this only decides what the venue types and reads.
+   */
+  const offerConverted =
+    view.fx && view.currency !== quote.currency
+      ? convert(quote.amount, quote.currency, view.currency, view.fx)
+      : null;
+  // No rate means no switching: the label and the number stay in the act's own
+  // currency rather than showing one and meaning the other.
+  const offerCurrency = offerConverted == null ? quote.currency : view.currency;
+  const offerUnits = CURRENCIES[offerCurrency]?.minorUnits ?? 2;
+  const offerPrefill = offerConverted ?? quote.amount;
+  const offerValue =
+    offerEdited ?? (quote.amount ? String(roundForDisplay(offerPrefill, offerCurrency) / 10 ** offerUnits) : '');
 
   return (
     <form action={formAction} className="stack" style={{ gap: 14 }}>
@@ -297,7 +318,7 @@ export function InquiryPanel(props: InquiryPanelProps) {
 
       <div className="field">
         <label className="field__label" htmlFor="offer">
-          Your offer ({quote.currency})
+          Your offer ({offerCurrency})
         </label>
         <input
           className="input"
@@ -307,7 +328,14 @@ export function InquiryPanel(props: InquiryPanelProps) {
           value={offerValue}
           onChange={(e) => setOfferEdited(e.target.value)}
         />
-        <span className="field__hint">Pre-filled from their rate. Edit it to propose something else.</span>
+        <input type="hidden" name="offerCurrency" value={offerCurrency} />
+        <input type="hidden" name="listingCurrency" value={quote.currency} />
+        <span className="field__hint">
+          Pre-filled from their rate. Edit it to propose something else.
+          {offerCurrency !== quote.currency
+            ? ` Agreed and paid in ${quote.currency}, converted when you send it.`
+            : ''}
+        </span>
       </div>
 
       <div className="field">

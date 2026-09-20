@@ -11,6 +11,8 @@ import { useActionState, useState } from 'react';
 import { transitionInquiryAction, leaveReviewAction, type ActionState } from '@/app/actions';
 import { allowedTransitions } from '@/domain/inquiry';
 import type { InquiryActor, InquiryStatus } from '@/domain/types';
+import { useMoney } from '@/components/money';
+import { CURRENCIES, convert, roundForDisplay } from '@/domain/currency';
 
 export function InquiryActions({
   inquiryId,
@@ -27,6 +29,19 @@ export function InquiryActions({
 }) {
   const [state, action, pending] = useActionState<ActionState, FormData>(transitionInquiryAction, {});
   const [open, setOpen] = useState<string | null>(null);
+  // Counter in whatever currency this person is reading prices in.
+  const view = useMoney();
+  const counterConverted =
+    view.fx && view.currency !== currency
+      ? convert(offerAmount, currency, view.currency, view.fx)
+      : null;
+  // As on the inquiry form: without a rate, stay in the act's currency rather
+  // than label a number one thing and send it as another.
+  const counterCurrency = counterConverted == null ? currency : view.currency;
+  const counterUnits = CURRENCIES[counterCurrency]?.minorUnits ?? 2;
+  const counterPrefill = String(
+    roundForDisplay(counterConverted ?? offerAmount, counterCurrency) / 10 ** counterUnits,
+  );
 
   const moves = allowedTransitions(status, actor).filter((t) => t.to !== 'viewed');
   if (!moves.length) {
@@ -61,16 +76,24 @@ export function InquiryActions({
           {active.to === 'countered' ? (
             <div className="field">
               <label className="field__label" htmlFor="offer">
-                Your counter-offer ({currency})
+                Your counter-offer ({counterCurrency})
               </label>
               <input
                 className="input"
                 id="offer"
                 name="offer"
                 inputMode="decimal"
-                defaultValue={String(offerAmount / 100)}
+                defaultValue={counterPrefill}
                 required
               />
+              {/* Travels with the number: the same figure means different money
+                  depending on what the person typing it was being shown. */}
+              <input type="hidden" name="offerCurrency" value={counterCurrency} />
+              {counterCurrency !== currency ? (
+                <span className="field__hint">
+                  Agreed and paid in {currency}, converted when you send it.
+                </span>
+              ) : null}
             </div>
           ) : null}
 

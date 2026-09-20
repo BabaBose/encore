@@ -16,8 +16,9 @@ import { newId, slugify } from '@/db/ids';
 import { AuthError, currentSessionToken, currentUser, endSession, hashPassword, requireRole, requireUser, startSession, verifyPassword } from '@/lib/auth';
 import { accessRoleFor, leaveReview, postMessage, sendInquiry, transitionInquiry } from '@/services/booking';
 import { mayEditProfile } from '@/domain/profile';
-import { knownCurrency } from '@/domain/currency';
+import { BASE_CURRENCY, convert, knownCurrency, parseAmount } from '@/domain/currency';
 import { CURRENCY_COOKIE, CURRENCY_COOKIE_MAX_AGE } from '@/lib/visitor';
+import { fxTable } from '@/lib/fx';
 import { moveProfile, setFeatured, setVerified } from '@/services/profile';
 import { canRemoveBlock, normaliseManualBlock } from '@/domain/availability';
 import { isIsoDate } from '@/domain/dates';
@@ -180,6 +181,33 @@ export async function toggleShortlistAction(_prev: ActionState, data: FormData):
 
 // --------------------------------------------------------------- inquiries --
 
+/**
+ * Reads a money field a person typed, converting from whatever currency the
+ * form was showing them into the currency the inquiry is denominated in.
+ *
+ * The form sends the currency alongside the number, because the number alone
+ * is ambiguous: "1000" means one thing to someone seeing euros and another to
+ * someone seeing dirhams, and guessing wrong here is a wrong offer on a real
+ * booking. Anything unconvertible is taken at face value in the target
+ * currency, which is the same thing the form was showing.
+ */
+async function readOffer(data: FormData, into: string): Promise<number | null> {
+  const raw = str(data, 'offer');
+  if (!raw) return null;
+  const typedIn = knownCurrency(str(data, 'offerCurrency')) ?? into;
+  const minor = parseAmount(raw, typedIn);
+  if (typedIn === into) return minor;
+
+  const converted = convert(minor, typedIn, into, await fxTable());
+  if (converted == null) {
+    // Falling back to the raw number would be worse than failing: minor units
+    // do not line up across currencies, so ₩1,000 taken at face value becomes
+    // AED 10. Refuse rather than store a hundredth of what someone offered.
+    throw new Error(`Could not convert your offer from ${typedIn} to ${into}. Enter it in ${into}.`);
+  }
+  return converted;
+}
+
 export async function sendInquiryAction(_prev: ActionState, data: FormData): Promise<ActionState> {
   let inquiryId: string | null = null;
   const result = await guard(async () => {
@@ -193,7 +221,6 @@ export async function sendInquiryAction(_prev: ActionState, data: FormData): Pro
     if (!startDate || !isIsoDate(startDate)) return { error: 'Pick a date to start from' };
 
     const monthsRaw = num(data, 'months');
-    const offerRaw = str(data, 'offer');
 
     inquiryId = await sendInquiry(db, {
       venueId: venue.id,
@@ -210,7 +237,7 @@ export async function sendInquiryAction(_prev: ActionState, data: FormData): Pro
       cityId: str(data, 'cityId') || venue.cityId,
       eventType: str(data, 'eventType') || null,
       notes: str(data, 'notes') || null,
-      offerAmount: offerRaw ? parseMoney(offerRaw) : null,
+      offerAmount: await readOffer(data, str(data, 'listingCurrency') || BASE_CURRENCY),
     });
     return {};
   });
@@ -229,14 +256,13 @@ export async function transitionInquiryAction(_prev: ActionState, data: FormData
     const actor = accessRoleFor(inquiry, user);
     if (!actor) throw new AuthError('This inquiry is not yours');
 
-    const offerRaw = str(data, 'offer');
     await transitionInquiry(db, {
       inquiryId,
       to: str(data, 'to') as InquiryStatus,
       actor,
       actorUserId: user.id,
       reason: str(data, 'reason') || null,
-      offer: offerRaw ? parseMoney(offerRaw) : null,
+      offer: await readOffer(data, inquiry.currency),
     });
     revalidatePath(`/app/inquiries/${inquiryId}`);
     revalidatePath('/app/inquiries');
