@@ -48,7 +48,7 @@ export function AvailabilityGrid({ blocks, year, month, specialDates = [], focus
             : day.status === 'blocked'
               ? (day.blocks[0]?.note ?? 'Unavailable')
               : special
-                ? 'Available — special-date rate'
+                ? 'Available - special-date rate'
                 : 'Available';
         return (
           <div

@@ -88,7 +88,7 @@ export function InquiryPanel(props: InquiryPanelProps) {
           q.minimumApplied ? ` (${q.minimumHours} hr minimum)` : ''
         }`,
         totalMinor: null as number | null,
-        totalNote: q.source === 'special_date' ? 'Special-date rate — overrides the weekly grid' : null,
+        totalNote: q.source === 'special_date' ? 'Special-date rate - overrides the weekly grid' : null,
         error: null as string | null,
       };
     } catch (err) {
@@ -120,7 +120,7 @@ export function InquiryPanel(props: InquiryPanelProps) {
         free: false,
         message:
           props.residencyInquiryPolicy === 'always'
-            ? `${r.blockedDays} of ${r.totalDays} days are booked — they still want to hear about residencies`
+            ? `${r.blockedDays} of ${r.totalDays} days are booked - they still want to hear about residencies`
             : `${r.blockedDays} of ${r.totalDays} days are already committed`,
       };
     }
@@ -287,7 +287,7 @@ export function InquiryPanel(props: InquiryPanelProps) {
         <div className="eyebrow">Their published rate</div>
         <div className="title" style={{ fontSize: 19, margin: '4px 0 6px' }}>
           {quote.headlineMinor == null ? (
-            '—'
+            '-'
           ) : (
             <Price minor={quote.headlineMinor} currency={quote.currency} suffix={quote.headlineSuffix} />
           )}
@@ -373,8 +373,8 @@ export function InquiryPanel(props: InquiryPanelProps) {
       <p className="field__hint" style={{ textAlign: 'center' }}>
         {availability && !availability.free
           ? gigType === 'long_term' && props.residencyInquiryPolicy === 'always'
-            ? 'Work the overlapping dates out in the thread — nothing is booked until they accept.'
-            : 'You can still ask — they may free the date up.'
+            ? 'Work the overlapping dates out in the thread - nothing is booked until they accept.'
+            : 'You can still ask - they may free the date up.'
           : 'They accept or counter; nothing is booked until they do.'}
       </p>
     </form>

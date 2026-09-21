@@ -95,7 +95,7 @@ export function ProfileForm({
 
         <div className="field">
           <label className="field__label" htmlFor="shortBio">
-            Short bio — one or two lines, used on search cards
+            Short bio - one or two lines, used on search cards
           </label>
           <input className="input" id="shortBio" name="shortBio" defaultValue={act.shortBio} maxLength={140} />
         </div>
@@ -237,7 +237,7 @@ export function ProfileForm({
         <hr className="divider" />
 
         <div className="stack" style={{ gap: 10 }}>
-          <div className="eyebrow">Availability modes — both can be on at once</div>
+          <div className="eyebrow">Availability modes - both can be on at once</div>
           <label className="checkline">
             <input type="checkbox" name="acceptsShortTerm" defaultChecked={act.acceptsShortTerm} />
             <span>
@@ -331,7 +331,7 @@ export function ProfileForm({
         {act.isManaged ? (
           <div className="field">
             <label className="field__label" htmlFor="representationNote">
-              Representation — shown on your public profile
+              Representation - shown on your public profile
             </label>
             <input
               className="input"
@@ -403,7 +403,7 @@ export function MediaEditor({
           ))}
         </div>
       ) : (
-        <div className="empty">No videos yet — a venue will not book what it cannot watch.</div>
+        <div className="empty">No videos yet - a venue will not book what it cannot watch.</div>
       )}
 
       <form action={addAction} className="panel__body row" style={{ gap: 10, alignItems: 'flex-end', borderTop: '1px solid var(--line-soft)' }}>
@@ -606,7 +606,7 @@ export function GoLiveChecklist({
           </Link>
         ) : (
           <p className="dim" style={{ fontSize: 12.5 }}>
-            Suspended — contact us to have this looked at again.
+            Suspended - contact us to have this looked at again.
           </p>
         )}
       </div>

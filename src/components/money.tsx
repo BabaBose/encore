@@ -92,14 +92,14 @@ function whyThisCurrency(view: MoneyView): string {
     case 'language':
       return `Showing ${name}, from your browser's language${where}. Change it here.`;
     default:
-      return `Showing ${name}, the marketplace default — we could not tell where you are. Change it here.`;
+      return `Showing ${name}, the marketplace default - we could not tell where you are. Change it here.`;
   }
 }
 
 function approxNote(from: string, to: string, fx: FxTable | null): string {
   const name = CURRENCIES[to]?.name ?? to;
   const when = fx ? ` Rates as of ${fx.asOf}.` : '';
-  return `Approximate only — about this much in ${name}. The booking is agreed and paid in ${from}.${when}`;
+  return `Approximate only - about this much in ${name}. The booking is agreed and paid in ${from}.${when}`;
 }
 
 /**
@@ -130,7 +130,7 @@ export function CurrencyPicker({ compact = false }: { compact?: boolean }) {
       >
         {codes.map((code) => (
           <option key={code} value={code}>
-            {compact ? code : `${code} — ${CURRENCIES[code].name}`}
+            {compact ? code : `${code} - ${CURRENCIES[code].name}`}
           </option>
         ))}
       </select>

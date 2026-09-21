@@ -250,7 +250,7 @@ async function notifyBothParties(
       entertainer: `Booking confirmed with ${inquiry.venueName} · ${whenLabel}`,
     },
     completed: {
-      venue: `Gig completed — leave ${inquiry.entertainerName} a review`,
+      venue: `Gig completed - leave ${inquiry.entertainerName} a review`,
       entertainer: `Gig with ${inquiry.venueName} marked completed`,
     },
     cancelled: {

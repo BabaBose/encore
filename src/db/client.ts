@@ -37,7 +37,7 @@ export class MissingDatabaseUrlError extends Error {
   constructor() {
     super(
       'No database configured. Set DATABASE_URL (or POSTGRES_URL) to the Supabase ' +
-        'connection string — the transaction pooler on port 6543 for serverless.',
+        'connection string - the transaction pooler on port 6543 for serverless.',
     );
     this.name = 'MissingDatabaseUrlError';
   }
@@ -60,7 +60,7 @@ export function connectionStringProblem(url: string): string | null {
   if (!url.trim()) return 'it is empty';
 
   if (/\[?YOUR[-_]PASSWORD\]?/i.test(url)) {
-    return 'it still contains the [YOUR-PASSWORD] placeholder. Replace that — square brackets included — with the actual database password.';
+    return 'it still contains the [YOUR-PASSWORD] placeholder. Replace that - square brackets included - with the actual database password.';
   }
   if (/^psql\s/i.test(url.trim()) || url.trim().startsWith('"')) {
     return 'it looks like a whole psql command rather than the URL. Copy only the postgresql://… part, with no surrounding quotes.';
@@ -78,7 +78,7 @@ export function connectionStringProblem(url: string): string | null {
   } catch {
     return (
       'it is not a valid URL. The usual cause is a password containing one of ' +
-      '@ : / ? # [ ] — those have to be percent-encoded (@ becomes %40). ' +
+      '@ : / ? # [ ] - those have to be percent-encoded (@ becomes %40). ' +
       'Resetting the database password to letters and digits avoids the problem entirely.'
     );
   }
@@ -258,7 +258,7 @@ export function schemaSql(): string {
   const path = join(process.cwd(), 'src', 'db', 'schema.sql');
   if (!existsSync(path)) {
     throw new Error(
-      `Could not find ${path}. The schema is applied from a checkout — run \`npm run db:push\` there, not from a deployment.`,
+      `Could not find ${path}. The schema is applied from a checkout - run \`npm run db:push\` there, not from a deployment.`,
     );
   }
   return readFileSync(path, 'utf8');

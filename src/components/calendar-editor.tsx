@@ -119,7 +119,7 @@ export function BlockList({
   const sorted = [...blocks].sort((a, b) => (a.start ?? '9999').localeCompare(b.start ?? '9999'));
 
   if (!sorted.length) {
-    return <div className="empty">Nothing blocked — every date is open.</div>;
+    return <div className="empty">Nothing blocked - every date is open.</div>;
   }
 
   return (
@@ -137,7 +137,7 @@ export function BlockList({
               ? `Every ${WEEKDAY_LABELS[block.weekday ?? 0]}`
               : block.start === block.end || !block.end
                 ? formatDate(block.start!)
-                : `${formatDate(block.start!)} – ${formatDate(block.end)}`;
+                : `${formatDate(block.start!)} - ${formatDate(block.end)}`;
 
           return (
             <div key={block.id} className="listing__item">

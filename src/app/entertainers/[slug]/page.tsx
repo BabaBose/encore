@@ -72,7 +72,7 @@ export default async function ProfilePage({
       <div className="page" style={accentStyle(act.heroAccent)}>
         {!isDiscoverable(act.status) ? (
           <div className="notice" style={{ marginBottom: 18 }}>
-            This profile is <strong>{act.status.replace('_', ' ')}</strong> — only you and Book the Act can see it.
+            This profile is <strong>{act.status.replace('_', ' ')}</strong> - only you and Book the Act can see it.
             {act.reviewNote ? <> Our note: “{act.reviewNote}”</> : null}
           </div>
         ) : null}
@@ -158,13 +158,13 @@ export default async function ProfilePage({
                   {act.teamSize === 1 ? 'Solo' : act.teamSize === 2 ? 'Duo' : act.teamSize === 3 ? 'Trio' : `${act.teamSize}-piece`}
                 </dd>
                 <dt>Languages</dt>
-                <dd>{act.languages.join(', ') || '—'}</dd>
+                <dd>{act.languages.join(', ') || '-'}</dd>
                 <dt>Origin</dt>
-                <dd>{act.countryOfOrigin || '—'}</dd>
+                <dd>{act.countryOfOrigin || '-'}</dd>
                 <dt>Brings</dt>
-                <dd>{act.equipmentProvided || '—'}</dd>
+                <dd>{act.equipmentProvided || '-'}</dd>
                 <dt>Needs</dt>
-                <dd>{act.equipmentRequired || '—'}</dd>
+                <dd>{act.equipmentRequired || '-'}</dd>
                 <dt>Travels</dt>
                 <dd>
                   {act.travelCityNames.length ? act.travelCityNames.join(', ') : 'Home city only'}
@@ -190,7 +190,7 @@ export default async function ProfilePage({
             <section>
               <SectionHead
                 title="Availability"
-                note={act.acceptsLongTerm && !act.acceptsShortTerm ? 'Residencies only' : 'Live — updated by the act'}
+                note={act.acceptsLongTerm && !act.acceptsShortTerm ? 'Residencies only' : 'Live - updated by the act'}
               />
               {act.acceptsShortTerm ? (
                 <>
@@ -232,7 +232,7 @@ export default async function ProfilePage({
             </section>
 
             <section>
-              <SectionHead title="Rates" note="Published in advance — nothing is negotiated blind" />
+              <SectionHead title="Rates" note="Published in advance - nothing is negotiated blind" />
               <div className="card stack" style={{ gap: 18 }}>
                 <RateSummary card={act.rateCard} />
                 {act.acceptsShortTerm ? (
@@ -243,7 +243,7 @@ export default async function ProfilePage({
                 {act.rateCard.specialDates.length ? (
                   <div>
                     <div className="eyebrow" style={{ marginBottom: 8 }}>
-                      Special dates — these override the grid
+                      Special dates - these override the grid
                     </div>
                     <div className="listing">
                       {act.rateCard.specialDates.map((s) => (
@@ -288,7 +288,7 @@ export default async function ProfilePage({
                   ))}
                 </div>
               ) : (
-                <Empty>No verified reviews yet — this act has not completed a booking through Book the Act.</Empty>
+                <Empty>No verified reviews yet - this act has not completed a booking through Book the Act.</Empty>
               )}
             </section>
 
@@ -296,7 +296,7 @@ export default async function ProfilePage({
               <section>
                 <SectionHead
                   title="References"
-                  note="Added by the act and checked by Book the Act — not verified bookings"
+                  note="Added by the act and checked by Book the Act - not verified bookings"
                 />
                 <div className="stack" style={{ gap: 12 }}>
                   {references.map((r) => (

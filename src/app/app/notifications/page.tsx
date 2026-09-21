@@ -36,7 +36,7 @@ export default async function NotificationsPage() {
           ) : null}
         </div>
         <p className="lede" style={{ marginBottom: 24 }}>
-          Inquiries, replies, confirmations and reviews — everything Book the Act would also email you about.
+          Inquiries, replies, confirmations and reviews - everything Book the Act would also email you about.
         </p>
 
         {notifications.length === 0 ? (

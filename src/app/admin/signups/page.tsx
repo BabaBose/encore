@@ -99,7 +99,7 @@ export default async function AdminSignupsPage() {
                     </div>
                   </div>
                   <span className="mono dim" style={{ fontSize: 12 }}>
-                    {c.recent ? `+${c.recent} new` : '—'}
+                    {c.recent ? `+${c.recent} new` : '-'}
                   </span>
                   <span style={{ font: '700 18px var(--font-sans)', minWidth: 32, textAlign: 'right' }}>
                     {c.total}
@@ -143,12 +143,12 @@ export default async function AdminSignupsPage() {
                     </div>
                     <span className="pill pill--neutral">{ROLE_LABEL[s.role] ?? s.role}</span>
                     <span className="dim" style={{ fontSize: 12, minWidth: 130 }}>
-                      {s.categoryLabel ?? s.venueType ?? '—'}
+                      {s.categoryLabel ?? s.venueType ?? '-'}
                       {s.actStatus ? ` · ${PROFILE_STATUS_LABEL[s.actStatus]}` : ''}
                     </span>
                     <span className="mono dim" style={{ fontSize: 11.5, minWidth: 110, textAlign: 'right' }}>
                       {timeAgo(s.createdAt)}
-                      <span className="visually-hidden"> — {formatDate(s.createdAt.slice(0, 10))}</span>
+                      <span className="visually-hidden"> - {formatDate(s.createdAt.slice(0, 10))}</span>
                     </span>
                   </div>
                 ))}

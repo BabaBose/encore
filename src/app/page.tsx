@@ -85,7 +85,7 @@ export default async function HomePage() {
               Great nights start with <em>great acts.</em>
             </h1>
             <p className="hero-lede">
-              Restaurants, hotels and bars book live acts here — singers, bands, DJs, magicians — seeing who is
+              Restaurants, hotels and bars book live acts here - singers, bands, DJs, magicians - seeing who is
               free on the night and what they charge before sending a message. Artists and their agents list
               once, and get found.
             </p>
@@ -180,7 +180,7 @@ export default async function HomePage() {
         <section style={{ marginBottom: 34 }}>
           <SectionHead
             title="Open to a residency"
-            note="1–12 month contracts"
+            note="1-12 month contracts"
             action={
               <Link className="btn btn--sm" href="/search?gigType=long_term&months=6">
                 See all

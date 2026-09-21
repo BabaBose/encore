@@ -35,7 +35,7 @@ export function RateEditor({
         <span className="eyebrow">Short-term · per gig</span>
         <label className="checkline" style={{ fontSize: 12 }}>
           <input type="checkbox" name="published" defaultChecked={published} />
-          <span>Published — venues can see these</span>
+          <span>Published - venues can see these</span>
         </label>
       </div>
       <div className="panel__body stack" style={{ gap: 20 }}>
@@ -70,7 +70,7 @@ export function RateEditor({
 
         <div>
           <div className="eyebrow" style={{ marginBottom: 8 }}>
-            Day of week × time of day — leave a cell blank if you do not play it
+            Day of week × time of day - leave a cell blank if you do not play it
           </div>
           <div className="scroll-x">
             <table className="rate-grid">
@@ -93,7 +93,7 @@ export function RateEditor({
                         <input
                           name={`rule:${i}:${b}`}
                           inputMode="decimal"
-                          placeholder="—"
+                          placeholder="-"
                           aria-label={`${label} ${TIME_BLOCK_LABELS[b]} hourly rate`}
                           defaultValue={major(rule(i as Weekday, b)?.hourly)}
                         />
@@ -193,7 +193,7 @@ export function SpecialDateEditor({ entertainerId, card }: { entertainerId: stri
       <div className="panel__head">
         <span className="eyebrow">Special dates</span>
         <span className="dim" style={{ fontSize: 12 }}>
-          NYE, Eid, Diwali — these override the grid
+          NYE, Eid, Diwali - these override the grid
         </span>
       </div>
 

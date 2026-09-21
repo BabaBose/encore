@@ -15,7 +15,7 @@ interface Step {
 const FOR_ARTISTS: Step[] = [
   {
     title: 'Build the profile once',
-    body: 'Reel, photos, bio, awards, references. One video is the minimum to go live — nobody books what they cannot watch.',
+    body: 'Reel, photos, bio, awards, references. One video is the minimum to go live - nobody books what they cannot watch.',
   },
   {
     title: 'Publish your rates',
@@ -23,7 +23,7 @@ const FOR_ARTISTS: Step[] = [
   },
   {
     title: 'Keep your calendar honest',
-    body: 'Block what you cannot play — a single night, a run, or every Monday. A confirmed booking blocks itself, so a date is never promised twice.',
+    body: 'Block what you cannot play - a single night, a run, or every Monday. A confirmed booking blocks itself, so a date is never promised twice.',
   },
   {
     title: 'Answer on your terms',
@@ -42,7 +42,7 @@ const FOR_VENUES: Step[] = [
   },
   {
     title: 'See the price before you speak to anyone',
-    body: 'Rates are published in advance and resolved for your date — including special-date pricing — so cost is never a conversation you have to start.',
+    body: 'Rates are published in advance and resolved for your date - including special-date pricing - so cost is never a conversation you have to start.',
   },
   {
     title: 'Check availability, not inboxes',
@@ -152,7 +152,7 @@ export function HowItWorks() {
         <Column
           eyebrow="For artists"
           title="Get booked without the back-and-forth"
-          blurb="Singers, bands, magicians, DJs, instrumentalists — solo or with an agent."
+          blurb="Singers, bands, magicians, DJs, instrumentalists - solo or with an agent."
           steps={FOR_ARTISTS}
           cta={{ href: '/signup', label: 'List your act' }}
           accent="var(--pink)"

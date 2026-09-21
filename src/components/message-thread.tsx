@@ -42,7 +42,7 @@ export function MessageThread({
       <div className="thread" style={{ flex: 1, minHeight: 200 }}>
         {messages.length === 0 ? (
           <p className="dim" style={{ fontSize: 13, textAlign: 'center', padding: '20px 0' }}>
-            No messages yet — say hello.
+            No messages yet - say hello.
           </p>
         ) : (
           messages.map((m) => (

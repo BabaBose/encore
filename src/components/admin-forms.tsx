@@ -51,7 +51,7 @@ export function ReviewDecision({ entertainerId, status }: { entertainerId: strin
           ) : null}
           {state.error ? <div className="notice notice--error">{state.error}</div> : null}
           <button className="btn btn--sm btn--primary" type="submit" disabled={pending}>
-            {pending ? 'Working…' : `Confirm — ${active[1].toLowerCase()}`}
+            {pending ? 'Working…' : `Confirm - ${active[1].toLowerCase()}`}
           </button>
         </form>
       ) : state.error ? (

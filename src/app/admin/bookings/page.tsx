@@ -69,7 +69,7 @@ export default async function AdminBookingsPage() {
                           ? `${i.months}-month residency`
                           : i.startDate
                             ? formatDate(i.startDate)
-                            : '—'}{' '}
+                            : '-'}{' '}
                         · {formatMoney(i.offerAmount, i.currency)}
                         {i.cityName ? ` · ${i.cityName}` : ''}
                       </div>

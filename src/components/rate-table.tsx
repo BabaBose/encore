@@ -33,7 +33,7 @@ export function RateGrid({ card }: { card: RateCard }) {
               if (!rule) {
                 return (
                   <td key={b} className="is-empty">
-                    —
+                    -
                   </td>
                 );
               }

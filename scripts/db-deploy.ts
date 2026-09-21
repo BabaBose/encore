@@ -79,7 +79,7 @@ async function main(): Promise<void> {
   const existing = Number(rows[0].n);
 
   if (existing > 0 && !force) {
-    console.log(`Database already has ${existing} accounts — leaving the data alone.`);
+    console.log(`Database already has ${existing} accounts - leaving the data alone.`);
   } else {
     const counts = await seedDatabase(db);
     console.log('Seeded the demo marketplace:', counts);
@@ -116,7 +116,7 @@ main().catch((err) => {
         '',
         "That is Supabase's direct endpoint and it has no IPv4 address. Vercel is",
         'IPv4-only, so it can never reach it. Set DATABASE_URL to the transaction',
-        'pooler instead — Supabase → Project Settings → Database → Connection string',
+        'pooler instead - Supabase → Project Settings → Database → Connection string',
         '→ Transaction pooler (port 6543). DATABASE_URL takes precedence over the',
         "integration's POSTGRES_URL.",
         '',

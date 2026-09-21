@@ -374,7 +374,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           </div>
 
           <div className="row row--tight" style={{ marginBottom: 18 }}>
-            {longTerm && !query.cityId ? <Chip accent>Global pool — no city set</Chip> : null}
+            {longTerm && !query.cityId ? <Chip accent>Global pool - no city set</Chip> : null}
             {query.date ? <Chip>{formatDateShort(query.date)}</Chip> : null}
             {query.months ? <Chip>{query.months} months</Chip> : null}
             {query.category ? <Chip>{categories.find((c) => c.slug === query.category)?.label}</Chip> : null}
@@ -386,7 +386,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
               Nothing matches yet.{' '}
               {longTerm
                 ? 'Try a shorter contract, or clear the city to reach acts open to relocating.'
-                : 'Try another date, or widen the city — some acts travel but have not listed yours.'}
+                : 'Try another date, or widen the city - some acts travel but have not listed yours.'}
             </Empty>
           ) : (
             <div className="grid grid--cards">
@@ -417,7 +417,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                   priceNote={r.exactRate && query.date ? `on ${formatDateShort(query.date)}` : null}
                   windowNote={
                     r.residency && !r.residency.largelyFree
-                      ? `${r.residency.blockedDays} of ${r.residency.totalDays} days already booked — open to talking`
+                      ? `${r.residency.blockedDays} of ${r.residency.totalDays} days already booked - open to talking`
                       : null
                   }
                 />

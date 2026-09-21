@@ -135,20 +135,20 @@ export default async function InquiryPage({ params }: { params: Promise<{ id: st
                       <dt>Length</dt>
                       <dd>{fresh.months} months</dd>
                       <dt>Nights</dt>
-                      <dd>{fresh.daysPerWeek ?? '—'} a week</dd>
+                      <dd>{fresh.daysPerWeek ?? '-'} a week</dd>
                     </>
                   ) : (
                     <>
                       <dt>Time</dt>
-                      <dd>{fresh.timeBlock ? TIME_BLOCK_LABELS[fresh.timeBlock] : '—'}</dd>
+                      <dd>{fresh.timeBlock ? TIME_BLOCK_LABELS[fresh.timeBlock] : '-'}</dd>
                       <dt>Hours</dt>
-                      <dd>{fresh.hours ?? '—'}</dd>
+                      <dd>{fresh.hours ?? '-'}</dd>
                     </>
                   )}
                   <dt>Dates</dt>
-                  <dd>{range ? `${formatDate(range.start)} – ${formatDate(range.end)}` : '—'}</dd>
+                  <dd>{range ? `${formatDate(range.start)} - ${formatDate(range.end)}` : '-'}</dd>
                   <dt>City</dt>
-                  <dd>{fresh.cityName ?? '—'}</dd>
+                  <dd>{fresh.cityName ?? '-'}</dd>
                   <dt>Act</dt>
                   <dd>
                     <Link href={`/entertainers/${fresh.entertainerSlug}`} style={{ textDecoration: 'underline' }}>

@@ -43,7 +43,7 @@ function describe(row: repo.ActivityRow): { headline: string; note: string } {
       return { headline: `${row.actor} signed up as a ${row.subject}`, note: row.detail };
     case 'profile':
       return {
-        headline: `${row.actor} — profile ${PROFILE_STATUS_LABEL[row.subject as ProfileStatus] ?? row.subject}`,
+        headline: `${row.actor} - profile ${PROFILE_STATUS_LABEL[row.subject as ProfileStatus] ?? row.subject}`,
         note: row.detail,
       };
     case 'inquiry':

@@ -26,9 +26,9 @@ function when(i: InquiryRow): string {
   if (i.gigType === 'long_term') {
     return `${i.months}-month residency${i.startDate ? ` from ${formatDate(i.startDate)}` : ''}`;
   }
-  if (!i.startDate) return '—';
+  if (!i.startDate) return '-';
   return i.endDate && i.endDate !== i.startDate
-    ? `${formatDate(i.startDate)} – ${formatDate(i.endDate)}`
+    ? `${formatDate(i.startDate)} - ${formatDate(i.endDate)}`
     : formatDate(i.startDate);
 }
 
@@ -68,7 +68,7 @@ export default async function InquiriesPage() {
           Inquiries
         </h1>
         <p className="lede" style={{ marginBottom: 26 }}>
-          Every negotiation stays here — date, price and thread in one place, so nothing moves to email and gets
+          Every negotiation stays here - date, price and thread in one place, so nothing moves to email and gets
           lost.
         </p>
 

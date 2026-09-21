@@ -154,7 +154,7 @@ export function SignUpForm({ cities }: { cities: CityRef[] }) {
 
       {role === 'entertainer' ? (
         <p className="field__hint">
-          Entertainers pay a subscription — Book the Act takes no commission on a booking. You start on a free trial
+          Entertainers pay a subscription - Book the Act takes no commission on a booking. You start on a free trial
           and your profile goes live once we have reviewed it.
         </p>
       ) : null}

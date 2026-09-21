@@ -297,7 +297,7 @@ export async function leaveReviewAction(_prev: ActionState, data: FormData): Pro
       body: str(data, 'body'),
     });
     revalidatePath(`/app/inquiries/${str(data, 'inquiryId')}`);
-    return { ok: 'Thanks — your review is on their profile' };
+    return { ok: 'Thanks - your review is on their profile' };
   });
 }
 
@@ -413,7 +413,7 @@ export async function addReferenceAction(_prev: ActionState, data: FormData): Pr
     });
     revalidatePath('/app/profile');
     // Self-submitted references are moderated before they appear.
-    return { ok: 'Added — it appears once Book the Act has checked it' };
+    return { ok: 'Added - it appears once Book the Act has checked it' };
   });
 }
 

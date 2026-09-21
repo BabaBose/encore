@@ -253,7 +253,7 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
     {
       name: 'The Amber Quartet',
       email: 'amber@booktheact.test',
-      shortBio: 'Jazz ensemble — standards, bossa and late-night bebop.',
+      shortBio: 'Jazz ensemble - standards, bossa and late-night bebop.',
       fullBio:
         'A four-piece built for hotel lobbies and long dinner services: upright bass, piano, drums and a rotating horn chair. The Amber Quartet has held two multi-month residencies in Downtown Dubai and travels as a unit.',
       category: 'band',
@@ -299,7 +299,7 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
       email: 'kael@booktheact.test',
       shortBio: 'Close-up magician working tables in 25-minute rotations.',
       fullBio:
-        'Kael works the room rather than a stage — sleight of hand at the table, built around 25-minute rotations so a full restaurant sees him across a service. Equally at home in a private dining room.',
+        'Kael works the room rather than a stage - sleight of hand at the table, built around 25-minute rotations so a full restaurant sees him across a service. Equally at home in a private dining room.',
       category: 'magician',
       genres: ['Close-up magic', 'Mentalism'],
       city: 'dubai',
@@ -307,7 +307,7 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
       accent: GREEN,
       teamSize: 1,
       languages: ['English'],
-      provides: 'Everything — no technical requirements at all',
+      provides: 'Everything - no technical requirements at all',
       requires: 'Nothing',
       travelCities: ['abu-dhabi'],
       travelRadiusKm: 150,
@@ -325,7 +325,7 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
     {
       name: 'Yusuf Barak',
       email: 'yusuf@booktheact.test',
-      shortBio: 'Solo jazz piano — brunch through to late service.',
+      shortBio: 'Solo jazz piano - brunch through to late service.',
       fullBio:
         'Twenty years of hotel piano across Beirut and the Gulf. Yusuf reads a room quickly, moves between standards and Arabic repertoire, and is happy to play four hours without a set list.',
       category: 'instrumentalist',
@@ -335,7 +335,7 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
       accent: AMBER,
       teamSize: 1,
       languages: ['Arabic', 'English', 'French'],
-      provides: 'Nothing — plays the house piano',
+      provides: 'Nothing - plays the house piano',
       requires: 'Tuned piano or weighted 88-key stage piano',
       travelCities: ['abu-dhabi', 'sharjah'],
       travelRadiusKm: 200,
@@ -386,7 +386,7 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
       email: 'dario@booktheact.test',
       shortBio: 'Jazz trio for dinner service and late sets.',
       fullBio:
-        'Piano, bass and brushed drums. Dario builds the set around the service — quiet under the first sitting, opening up after ten.',
+        'Piano, bass and brushed drums. Dario builds the set around the service - quiet under the first sitting, opening up after ten.',
       category: 'band',
       genres: ['Jazz ensemble'],
       city: 'dubai',
@@ -439,7 +439,7 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
       email: 'sable@booktheact.test',
       shortBio: 'Open-format and deep house DJ, late slots.',
       fullBio:
-        'Sable plays the back half of the night — deep house into open format, reading the floor rather than running a prepared set. Brings controller and needs only a booth feed.',
+        'Sable plays the back half of the night - deep house into open format, reading the floor rather than running a prepared set. Brings controller and needs only a booth feed.',
       category: 'dj',
       genres: ['Deep house', 'Open format', 'House'],
       city: 'dubai',
@@ -466,7 +466,7 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
     {
       name: 'Kestrel Strings',
       email: 'kestrel@booktheact.test',
-      shortBio: 'String quartet — ceremonies, arrivals and long lunches.',
+      shortBio: 'String quartet - ceremonies, arrivals and long lunches.',
       fullBio:
         'Four players, arranged pop as readily as Vivaldi. Kestrel is a London-based quartet that takes multi-month hotel contracts abroad and handles its own travel.',
       category: 'instrumentalist',
@@ -504,7 +504,7 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
       accent: CORAL,
       teamSize: 7,
       languages: ['Arabic', 'English'],
-      provides: 'Everything — acoustic act',
+      provides: 'Everything - acoustic act',
       requires: 'Nothing',
       shortTerm: true,
       longTerm: true,
@@ -692,7 +692,7 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
     }
 
     for (const [i, url] of act.videos.entries()) {
-      await repo.addMedia(db, id, { kind: 'video', url, title: `${act.name} — reel ${i + 1}`, accent: act.accent });
+      await repo.addMedia(db, id, { kind: 'video', url, title: `${act.name} - reel ${i + 1}`, accent: act.accent });
     }
     for (let i = 0; i < (act.photos ?? 0); i++) {
       await repo.addMedia(db, id, { kind: 'photo', url: `gradient:${act.accent}:${i}`, accent: act.accent });
@@ -786,7 +786,7 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
   for (const name of ['Nadia Rahim', 'Sable', 'Kael Voss', 'Brass Rule']) {
     await repo.addToShortlist(db, nyeList, actIds.get(name)!);
   }
-  const brunchList = await repo.createShortlist(db, penthouse, 'Friday jazz brunch', 'Weekly, 12:00–16:00');
+  const brunchList = await repo.createShortlist(db, penthouse, 'Friday jazz brunch', 'Weekly, 12:00-16:00');
   for (const name of ['Yusuf Barak', 'Dario Sette', 'The Amber Quartet']) {
     await repo.addToShortlist(db, brunchList, actIds.get(name)!);
   }
@@ -809,17 +809,17 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
     hours: 4,
     cityId: 'dubai',
     eventType: 'New Year’s Eve rooftop',
-    notes: '21:00–01:00, 180 covers. Two 90-minute sets with a break at midnight.',
+    notes: '21:00-01:00, 180 covers. Two 90-minute sets with a break at midnight.',
   });
   const nadiaUser = (await repo.getEntertainerById(db, actIds.get('Nadia Rahim')!))!.userId;
 
-  await postMessage(db, nyeInquiry, penthouseUser, 'Hi Nadia — we loved the rooftop reel. Holding 31 Dec, 21:00–01:00, 180 covers.');
+  await postMessage(db, nyeInquiry, penthouseUser, 'Hi Nadia - we loved the rooftop reel. Holding 31 Dec, 21:00-01:00, 180 covers.');
   await transitionInquiry(db, { inquiryId: nyeInquiry, to: 'viewed', actor: 'entertainer', actorUserId: nadiaUser });
   await postMessage(db, nyeInquiry, nadiaUser, 'Thanks! That date is open. Two 90-minute sets with a break at midnight works for me.');
   await transitionInquiry(db, { inquiryId: nyeInquiry, to: 'accepted', actor: 'entertainer', actorUserId: nadiaUser });
   await transitionInquiry(db, { inquiryId: nyeInquiry, to: 'confirmed', actor: 'entertainer', actorUserId: nadiaUser });
   await postMessage(db, nyeInquiry, nadiaUser, 'Accepted. I’ll bring my own IEMs, just need two monitor sends and a vocal mic on a boom.');
-  await postMessage(db, nyeInquiry, penthouseUser, 'Noted — our engineer will be there from 18:00 for line check.');
+  await postMessage(db, nyeInquiry, penthouseUser, 'Noted - our engineer will be there from 18:00 for line check.');
 
   // 2. A counter-offer on the table, for the venue's inquiry pipeline.
   const sableUser = (await repo.getEntertainerById(db, actIds.get('Sable')!))!.userId;
@@ -856,10 +856,10 @@ export async function seedDatabase(db: Db): Promise<SeedCounts> {
     daysPerWeek: 5,
     cityId: 'dubai',
     eventType: 'Lobby residency',
-    notes: 'Six months, five nights a week, 19:00–23:00.',
+    notes: 'Six months, five nights a week, 19:00-23:00.',
   });
   await transitionInquiry(db, { inquiryId: residencyInquiry, to: 'viewed', actor: 'entertainer', actorUserId: amberUser });
-  await postMessage(db, residencyInquiry, amberUser, 'Attaching the residency rider and the visa timeline — happy to talk relocation.');
+  await postMessage(db, residencyInquiry, amberUser, 'Attaching the residency rider and the visa timeline - happy to talk relocation.');
 
   // 4. A brand-new inquiry sitting in the entertainer's queue.
   await sendInquiry(db, {
@@ -941,7 +941,7 @@ async function main(): Promise<void> {
   await db.close();
 
   console.log('Seeded Book the Act:', counts);
-  console.log('\nSign in with any of these — the password is always `password`:');
+  console.log('\nSign in with any of these - the password is always `password`:');
   console.log('  venue        penthouse@booktheact.test');
   console.log('  entertainer  nadia@booktheact.test');
   console.log('  agency       northline@booktheact.test');

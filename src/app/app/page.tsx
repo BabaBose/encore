@@ -165,7 +165,7 @@ export default async function AppHome() {
         <section style={{ marginBottom: 28 }}>
           <SectionHead
             title="Your calendar"
-            note="A confirmed booking blocks itself — you never re-enter a date"
+            note="A confirmed booking blocks itself - you never re-enter a date"
             action={
               <Link className="btn btn--sm" href="/app/calendar">
                 Manage
@@ -306,7 +306,7 @@ async function AgencyRoster({
           </div>
         ) : (
           <Empty>
-            No acts on your roster yet. We link an act to your agency when it is set up — get in touch and we
+            No acts on your roster yet. We link an act to your agency when it is set up - get in touch and we
             will attach them.
           </Empty>
         )}

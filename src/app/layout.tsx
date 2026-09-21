@@ -4,7 +4,7 @@ import { ThemeScript } from '@/components/theme';
 import { BRAND_NAME, DESCRIPTION, TAGLINE } from '@/lib/brand';
 
 export const metadata: Metadata = {
-  title: { default: `${BRAND_NAME} — ${TAGLINE}`, template: `%s · ${BRAND_NAME}` },
+  title: { default: `${BRAND_NAME} - ${TAGLINE}`, template: `%s · ${BRAND_NAME}` },
   description: DESCRIPTION,
   applicationName: BRAND_NAME,
   openGraph: { title: BRAND_NAME, description: TAGLINE, siteName: BRAND_NAME, type: 'website' },

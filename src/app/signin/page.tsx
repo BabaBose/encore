@@ -21,7 +21,7 @@ export default async function SignInPage() {
         <SignInForm />
         <div className="card" style={{ marginTop: 24 }}>
           <div className="eyebrow" style={{ marginBottom: 8 }}>
-            Demo accounts — password is <code>password</code>
+            Demo accounts - password is <code>password</code>
           </div>
           <p className="field__hint" style={{ marginBottom: 10 }}>
             These three walk through the marketplace. Staff accounts are not demo accounts and are not listed.

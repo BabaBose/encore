@@ -45,7 +45,7 @@ export function InquiryActions({
 
   const moves = allowedTransitions(status, actor).filter((t) => t.to !== 'viewed');
   if (!moves.length) {
-    return <p className="dim" style={{ fontSize: 12.5 }}>This inquiry is closed — nothing left to do.</p>;
+    return <p className="dim" style={{ fontSize: 12.5 }}>This inquiry is closed - nothing left to do.</p>;
   }
 
   const active = moves.find((m) => m.to === open);
@@ -141,7 +141,7 @@ export function ReviewForm({ inquiryId, entertainerName }: { inquiryId: string; 
       <div>
         <div className="subtitle">How was {entertainerName}?</div>
         <p className="dim" style={{ fontSize: 12.5 }}>
-          This becomes a verified review on their profile — venues can tell it apart from quotes acts add
+          This becomes a verified review on their profile - venues can tell it apart from quotes acts add
           themselves.
         </p>
       </div>

@@ -55,7 +55,7 @@ export default async function CalendarPage({
           Calendar
         </h1>
         <p className="lede" style={{ marginBottom: 26 }}>
-          Venues see this live. Block what you cannot play — confirmed bookings block themselves.
+          Venues see this live. Block what you cannot play - confirmed bookings block themselves.
         </p>
 
         <div className="split">
