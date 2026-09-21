@@ -71,6 +71,7 @@ function Column({
   blurb: string;
   steps: Step[];
   cta: { href: string; label: string };
+  /** A token, not a hex — the light theme darkens these for contrast. */
   accent: string;
 }) {
   return (
@@ -154,7 +155,7 @@ export function HowItWorks() {
           blurb="Singers, bands, magicians, DJs, instrumentalists — solo or with an agent."
           steps={FOR_ARTISTS}
           cta={{ href: '/signup', label: 'List your act' }}
-          accent="#ff5fa2"
+          accent="var(--pink)"
         />
         <Column
           eyebrow="For venues"
@@ -162,7 +163,7 @@ export function HowItWorks() {
           blurb="Restaurants, hotels, bars and event teams."
           steps={FOR_VENUES}
           cta={{ href: '/search', label: 'Find an act' }}
-          accent="#5fb0ff"
+          accent="var(--blue)"
         />
       </div>
     </section>

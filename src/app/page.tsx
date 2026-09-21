@@ -69,18 +69,66 @@ export default async function HomePage() {
   return (
     <Shell user={user} current="/" badges={badges} money={money}>
       <div className="page">
-        <div style={{ marginBottom: 36 }}>
+        {/*
+          Test visitors could not tell what this site was. The tagline is a
+          mood, not an explanation, so it now sits under a line that names the
+          thing outright — a marketplace, for whom, for what — and above one
+          sentence per side. Two buttons follow, because the fastest way to
+          explain a two-sided marketplace is to let someone say which side they
+          are on.
+        */}
+        <div style={{ marginBottom: 20 }}>
           <HeroImage>
+            <div className="hero-eyebrow">The marketplace for live entertainment</div>
             <h1 className="hero-title">
               {/* The accent lands on the second half, as in the brand design. */}
               Great nights start with <em>great acts.</em>
             </h1>
             <p className="hero-lede">
-              Live availability, published rates and real portfolios. See what an act costs on your date before
-              you send a single message.
+              Restaurants, hotels and bars book live acts here — singers, bands, DJs, magicians — seeing who is
+              free on the night and what they charge before sending a message. Artists and their agents list
+              once, and get found.
             </p>
+            <div className="hero-actions">
+              <Link className="btn btn--primary" href="/search">
+                Find an act for my venue
+              </Link>
+              <Link className="btn" href="/signup">
+                List my act
+              </Link>
+            </div>
           </HeroImage>
         </div>
+
+        <section className="sides" aria-label="Who Book the Act is for">
+          {/* The same two colours the How it works columns use, so the venue
+              half and the artist half stay the same colour down the page. The
+              tokens, not their hexes: the light theme darkens both, and a
+              dark-theme blue on warm paper is barely there. */}
+          <Link href="/search" className="sides__card" style={{ ['--accent' as string]: 'var(--blue)' }}>
+            <div className="eyebrow" style={{ color: 'var(--accent)' }}>
+              If you run a venue
+            </div>
+            <h2 className="sides__title">Find someone for the night you actually have</h2>
+            <p className="sides__body">
+              Search by date, city and what kind of act you want. Every profile shows a live calendar and a
+              published rate, so you know who is free and what it costs before you speak to anyone.
+            </p>
+            <span className="sides__go">Browse acts →</span>
+          </Link>
+
+          <Link href="/signup" className="sides__card" style={{ ['--accent' as string]: 'var(--pink)' }}>
+            <div className="eyebrow" style={{ color: 'var(--accent)' }}>
+              If you perform, or represent someone who does
+            </div>
+            <h2 className="sides__title">Be found by the rooms that book you</h2>
+            <p className="sides__body">
+              One profile carries your reel, your rates and your calendar. Venues come to you with a date already
+              in mind, nothing is ever booked without you saying yes, and no commission comes out of your fee.
+            </p>
+            <span className="sides__go">List your act →</span>
+          </Link>
+        </section>
 
         {hero ? (
           <Link href={`/entertainers/${hero.slug}`} style={{ display: 'block', marginBottom: 34 }}>

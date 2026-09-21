@@ -1283,6 +1283,9 @@ a:focus-visible {
 .hero-frame {
   position: relative;
   aspect-ratio: 16 / 9;
+  /* Capped so what the site is, and the two doors under it, are both on screen
+     without scrolling on an ordinary laptop. */
+  max-height: 560px;
   border-radius: var(--radius-xl);
   overflow: hidden;
   border: 1px solid var(--line);
@@ -1298,14 +1301,18 @@ a:focus-visible {
   display: block;
 }
 
-/* Heavy enough at the bottom to read the tagline over a busy photograph. */
+/*
+ * Heavy enough to read a paragraph over a busy photograph — and this one has
+ * its own words baked into it, so the left side where the copy sits is taken
+ * down further than a tagline alone would need.
+ */
 .hero-scrim {
   position: absolute;
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(to top, #07050ceb 0%, #07050cb8 22%, #07050c40 48%, transparent 72%),
-    linear-gradient(to right, #07050c8c 0%, transparent 55%);
+    linear-gradient(to top, #07050cf5 0%, #07050cdb 24%, #07050c94 50%, #07050c38 74%, transparent 90%),
+    linear-gradient(to right, #07050cd6 0%, #07050c8f 34%, #07050c1f 60%, transparent 76%);
 }
 
 .hero-overlay {
@@ -1316,6 +1323,33 @@ a:focus-visible {
   padding: 38px 42px;
   /* The photograph underneath is dark in both themes, so these do not move. */
   color: #f7f3ef;
+}
+
+.hero-overlay .hero-eyebrow {
+  font: 500 11px var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #ffffffb8;
+  margin-bottom: 10px;
+}
+
+.hero-overlay .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+/* On the photograph these sit on their own colour, not the theme's. */
+.hero-overlay .hero-actions .btn:not(.btn--primary) {
+  background: #ffffff1f;
+  border-color: #ffffff4d;
+  color: #ffffff;
+  backdrop-filter: blur(6px);
+}
+
+.hero-overlay .hero-actions .btn:not(.btn--primary):hover {
+  background: #ffffff33;
 }
 
 .hero-overlay .hero-title {
@@ -1338,23 +1372,54 @@ a:focus-visible {
   text-shadow: 0 1px 14px #07050ccc;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 860px) {
+  /* Words below the picture rather than on it: there is no longer room over it,
+     and a paragraph over a busy photograph is the first thing to become
+     unreadable. */
   .hero-frame {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: auto;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-raised);
+  }
+
+  .hero-frame > img,
+  .hero-frame > svg {
+    height: 230px;
+    flex: none;
+  }
+
+  .hero-scrim {
+    inset: 0 0 auto 0;
+    height: 230px;
+    background: linear-gradient(to top, #07050c8c 0%, transparent 55%);
   }
 
   .hero-overlay {
-    padding: 22px 20px;
+    position: static;
+    padding: 18px 20px 22px;
   }
 
+  .hero-overlay .hero-title,
   .hero-overlay .hero-lede {
-    margin-top: 10px;
+    text-shadow: none;
+  }
+
+  .hero-overlay .hero-title {
+    max-width: none;
+  }
+
+  .hero-overlay .hero-actions .btn {
+    flex: 1 1 100%;
+    justify-content: center;
   }
 }
 
-@media (max-width: 480px) {
-  .hero-frame {
-    aspect-ratio: 4 / 5;
+@media (max-width: 420px) {
+  .hero-frame > img,
+  .hero-frame > svg,
+  .hero-scrim {
+    height: 190px;
   }
 }
 
@@ -1474,4 +1539,50 @@ a:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: -2px;
   }
+}
+
+
+/* ------------------------------------------------------- who it is for --
+ * Two doors, one per side of the marketplace, directly under the hero. A
+ * visitor who cannot tell what the site is should be able to find the half
+ * that concerns them without scrolling or reading anything long.
+ */
+.sides {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 16px;
+  margin-bottom: 34px;
+}
+
+.sides__card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line-soft);
+  background: var(--surface-raised);
+  transition: border-color 140ms ease, transform 140ms ease;
+}
+
+.sides__card:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  transform: translateY(-2px);
+}
+
+.sides__title {
+  font: 800 19px/1.2 var(--font-sans);
+  letter-spacing: -0.02em;
+}
+
+.sides__body {
+  font: 400 13.5px/1.6 var(--font-sans);
+  color: var(--ink-muted);
+}
+
+.sides__go {
+  margin-top: auto;
+  padding-top: 8px;
+  font: 600 13px var(--font-sans);
+  color: var(--accent);
 }
