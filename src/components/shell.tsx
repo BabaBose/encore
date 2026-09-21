@@ -11,6 +11,7 @@
  */
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { Icon, type IconName } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme";
 import {
   CurrencyPicker,
@@ -31,52 +32,56 @@ const ROLE_CHIP: Record<string, string> = {
 export interface NavItem {
   href: string;
   label: string;
+  /** Shown above the label in the phone tab bar, never instead of it. */
+  icon: IconName;
+  /** A shorter label for the tab bar, where seven of them share 390px. */
+  short?: string;
   badge?: number;
 }
 
 export function navFor(user: SessionUser | null): NavItem[] {
   if (!user) {
     return [
-      { href: "/", label: "Discover" },
-      { href: "/search", label: "Search" },
-      { href: "/#how-it-works", label: "How it works" },
-      { href: "/signin", label: "Sign in" },
+      { href: "/", label: "Discover", icon: "discover" },
+      { href: "/search", label: "Search", icon: "search" },
+      { href: "/#how-it-works", label: "How it works", icon: "guide" },
+      { href: "/signin", label: "Sign in", icon: "signin" },
     ];
   }
   switch (user.role) {
     case "venue":
       return [
-        { href: "/", label: "Discover" },
-        { href: "/search", label: "Search" },
-        { href: "/app/shortlists", label: "Shortlists" },
-        { href: "/app/inquiries", label: "Inquiries" },
-        { href: "/app/notifications", label: "Activity" },
+        { href: "/", label: "Discover", icon: "discover" },
+        { href: "/search", label: "Search", icon: "search" },
+        { href: "/app/shortlists", label: "Shortlists", icon: "shortlists" },
+        { href: "/app/inquiries", label: "Inquiries", icon: "inquiries" },
+        { href: "/app/notifications", label: "Activity", icon: "activity" },
       ];
     case "entertainer":
       return [
-        { href: "/app", label: "Dashboard" },
-        { href: "/app/calendar", label: "Calendar" },
-        { href: "/app/rates", label: "Rates" },
-        { href: "/app/inquiries", label: "Inquiries" },
-        { href: "/app/profile", label: "Profile" },
-        { href: "/app/notifications", label: "Activity" },
+        { href: "/app", label: "Dashboard", icon: "dashboard" },
+        { href: "/app/calendar", label: "Calendar", icon: "calendar" },
+        { href: "/app/rates", label: "Rates", icon: "rates" },
+        { href: "/app/inquiries", label: "Inquiries", icon: "inquiries" },
+        { href: "/app/profile", label: "Profile", icon: "profile" },
+        { href: "/app/notifications", label: "Activity", icon: "activity" },
       ];
     case "agency":
       return [
-        { href: "/app", label: "Roster" },
-        { href: "/app/inquiries", label: "Inquiries" },
-        { href: "/app/notifications", label: "Activity" },
-        { href: "/search", label: "Discover" },
+        { href: "/app", label: "Roster", icon: "roster" },
+        { href: "/app/inquiries", label: "Inquiries", icon: "inquiries" },
+        { href: "/app/notifications", label: "Activity", icon: "activity" },
+        { href: "/search", label: "Discover", icon: "search" },
       ];
     case "admin":
       return [
-        { href: "/admin", label: "Review queue" },
-        { href: "/admin/listings", label: "Listings" },
-        { href: "/admin/signups", label: "Sign-ups" },
-        { href: "/admin/activity", label: "Activity" },
-        { href: "/admin/bookings", label: "Bookings" },
-        { href: "/admin/moderation", label: "Moderation" },
-        { href: "/admin/taxonomy", label: "Taxonomy" },
+        { href: "/admin", label: "Review queue", icon: "queue", short: "Queue" },
+        { href: "/admin/listings", label: "Listings", icon: "listings" },
+        { href: "/admin/signups", label: "Sign-ups", icon: "signups" },
+        { href: "/admin/activity", label: "Activity", icon: "activity" },
+        { href: "/admin/bookings", label: "Bookings", icon: "bookings" },
+        { href: "/admin/moderation", label: "Moderation", icon: "moderation" },
+        { href: "/admin/taxonomy", label: "Taxonomy", icon: "taxonomy" },
       ];
   }
 }
@@ -108,8 +113,8 @@ export function Shell({
           className={`${variant}__link`}
           aria-current={current === item.href ? "page" : undefined}
         >
-          {variant === "tabbar" ? <span className="tabbar__dot" /> : null}
-          {item.label}
+          {variant === "tabbar" ? <Icon name={item.icon} /> : null}
+          {variant === "tabbar" ? (item.short ?? item.label) : item.label}
           {badge ? <span className={`${variant}__badge`}>{badge}</span> : null}
         </Link>
       );
